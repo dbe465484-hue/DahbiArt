@@ -18,9 +18,10 @@ export function StudioSubNav() {
       className="mb-8 flex flex-wrap gap-2 border-b border-stone-200/90 pb-4"
     >
       {links.map((item) => {
-        const active = item.exact
-          ? pathname === item.href
-          : pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active =
+          "exact" in item && item.exact
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link
             key={item.href}
