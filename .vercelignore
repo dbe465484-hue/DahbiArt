@@ -1,0 +1,22 @@
+# Accélère l’upload CLI (fichiers inutiles au runtime)
+node_modules
+.next
+out
+dist
+coverage
+.git
+.netlify
+docs
+tableaux
+headervid
+backend/uploads
+*.md
+!README.md
+railway.toml
+**/railway.toml
+render.yaml
+netlify.toml
+netlify.static.toml
+**/*.log
+**/.env
+**/.env.local

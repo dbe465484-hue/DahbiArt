@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-import 'typeorm';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -21,8 +19,7 @@ async function bootstrap() {
     new ValidationPipe({ whitelist: true, transform: true }),
   );
 
-  const apiPrefix =
-    process.env.API_ROUTE_PREFIX ?? (process.env.VERCEL ? 'api' : '');
+  const apiPrefix = process.env.API_ROUTE_PREFIX;
   if (apiPrefix) {
     app.setGlobalPrefix(apiPrefix);
   }
