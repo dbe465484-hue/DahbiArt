@@ -24,10 +24,10 @@ import { DatabaseBootstrapService } from './database/database-bootstrap.service'
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const syncEnv = config.get<string>('DB_SYNCHRONIZE');
-        const onVercel = process.env.VERCEL === '1';
+        // Ne pas auto-synchroniser sur Vercel : risque d’échec si des lignes ont image NULL
+        // (ex. après changement de schéma). Les migrations SQL sont dans DatabaseBootstrapService.
         const synchronize =
           syncEnv === 'true' ||
-          (onVercel && syncEnv !== 'false') ||
           (config.get<string>('NODE_ENV') !== 'production' &&
             syncEnv !== 'false');
 
