@@ -21,16 +21,35 @@ import { OrdersModule } from './orders/orders.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'mysql',
-        host: config.get<string>('DB_HOST', 'localhost'),
-        port: config.get<number>('DB_PORT', 3306),
-        username: config.get<string>('DB_USERNAME', 'root'),
-        password: config.get<string>('DB_PASSWORD', ''),
-        database: config.get<string>('DB_DATABASE', 'mayn'),
-        autoLoadEntities: true,
-        synchronize: config.get<string>('NODE_ENV') !== 'production',
-      }),
+      useFactory: (config: ConfigService) => {
+        const synchronize =
+          config.get<string>('DB_SYNCHRONIZE') === 'true' ||
+          config.get<string>('NODE_ENV') !== 'production';
+
+        const mysqlUrl =
+          config.get<string>('MYSQL_URL') ||
+          config.get<string>('DATABASE_URL');
+
+        if (mysqlUrl) {
+          return {
+            type: 'mysql' as const,
+            url: mysqlUrl,
+            autoLoadEntities: true,
+            synchronize,
+          };
+        }
+
+        return {
+          type: 'mysql' as const,
+          host: config.get<string>('DB_HOST', 'localhost'),
+          port: config.get<number>('DB_PORT', 3306),
+          username: config.get<string>('DB_USERNAME', 'root'),
+          password: config.get<string>('DB_PASSWORD', ''),
+          database: config.get<string>('DB_DATABASE', 'mayn'),
+          autoLoadEntities: true,
+          synchronize,
+        };
+      },
     }),
     AuthModule,
     PaintingsModule,

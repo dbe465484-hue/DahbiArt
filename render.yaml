@@ -1,0 +1,47 @@
+# Blueprint Render — déploiement API depuis GitHub
+# https://dashboard.render.com/blueprints → New Blueprint Instance → repo DahbiArt
+#
+# Après création : lier une base MySQL (voir docs/NETLIFY-RENDER.md) et renseigner
+# FRONTEND_URL + JWT_SECRET dans le dashboard si non fournis au premier déploiement.
+
+services:
+  - type: web
+    name: dahbiart-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: DB_SYNCHRONIZE
+        value: "true"
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CHECKOUT_DEV_MODE
+        value: "true"
+      - key: SHIPPING_DELAY_DAYS
+        value: "3"
+      - key: SHIPPING_FLAT_EUR
+        value: "0"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        value: admin@dahbiart.com
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_DATABASE
+        value: mayn

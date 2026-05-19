@@ -1,0 +1,11 @@
+# Service Railway : racine = backend/
+# Dashboard → service API → Settings → Root Directory = backend (si besoin)
+
+[build]
+builder = "nixpacks"
+buildCommand = "npm ci && npm run build"
+
+[deploy]
+startCommand = "npm run start:prod"
+healthcheckPath = "/health"
+restartPolicyType = "on_failure"

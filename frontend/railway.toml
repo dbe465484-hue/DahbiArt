@@ -1,0 +1,10 @@
+# Service Railway : racine = frontend/
+# Dashboard → service Web → Settings → Root Directory = frontend (si besoin)
+
+[build]
+builder = "nixpacks"
+buildCommand = "npm ci && npm run build"
+
+[deploy]
+startCommand = "npm run start"
+restartPolicyType = "on_failure"

@@ -1,0 +1,5 @@
+# Monorepo DahbiArt — Railway doit utiliser un dossier par service.
+# Dans le dashboard : Settings → Root Directory = backend OU frontend
+# (ne pas laisser la racine du repo vide)
+#
+# Guide : docs/RAILWAY-DEBUTANT.md

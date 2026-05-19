@@ -56,7 +56,13 @@ Il faut **deux hébergements** :
 | `frontend/` | Netlify (Next.js complet) ou Vercel | Site + pages admin (UI) |
 | `backend/` | Render, Railway, VPS… + **MySQL** | API, JWT, base de données |
 
-Guide détaillé : **[docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md)**
+Guides déploiement :
+
+- **[docs/RAILWAY-DEBUTANT.md](docs/RAILWAY-DEBUTANT.md)** — **Railway pour débutants** (erreur « Set root directory »)
+- **[docs/RAILWAY.md](docs/RAILWAY.md)** — Railway détaillé (MySQL + API + site)
+- **[docs/NETLIFY-RENDER.md](docs/NETLIFY-RENDER.md)** — Netlify (front) + Render (API)
+- **[docs/DEPLOIEMENT-RAPIDE.md](docs/DEPLOIEMENT-RAPIDE.md)** — version courte
+- **[docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md)** — architecture générale
 
 ### Netlify (recommandé pour le frontend)
 
