@@ -53,6 +53,12 @@ import { OrdersModule } from './orders/orders.module';
           };
         }
 
+        if (process.env.VERCEL) {
+          throw new Error(
+            'DATABASE_URL manquant : ajoutez Neon (Storage) dans le projet Vercel.',
+          );
+        }
+
         return {
           type: 'mysql' as const,
           host: config.get<string>('DB_HOST', 'localhost'),
