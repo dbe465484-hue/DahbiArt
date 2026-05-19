@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { UserRole } from '../common/enums/user-role.enum';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';

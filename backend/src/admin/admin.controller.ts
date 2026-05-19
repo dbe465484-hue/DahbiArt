@@ -12,7 +12,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { Roles } from '../auth/decorators/roles.decorator';

@@ -8,7 +8,6 @@ import { put } from '@vercel/blob';
 import { existsSync } from 'fs';
 import * as fs from 'fs';
 import * as path from 'path';
-import sharp from 'sharp';
 import { slugify } from '../common/utils/slugify';
 
 const MAX_BYTES = 12 * 1024 * 1024;
@@ -88,6 +87,7 @@ export class UploadsService {
 
     let webpBuffer: Buffer;
     try {
+      const { default: sharp } = await import('sharp');
       webpBuffer = await sharp(file.buffer)
         .rotate()
         .resize(maxEdge, maxHeight, {

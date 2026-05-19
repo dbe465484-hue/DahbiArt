@@ -23,9 +23,13 @@ import { DatabaseBootstrapService } from './database/database-bootstrap.service'
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
+        const syncEnv = config.get<string>('DB_SYNCHRONIZE');
+        const onVercel = process.env.VERCEL === '1';
         const synchronize =
-          config.get<string>('DB_SYNCHRONIZE') === 'true' ||
-          config.get<string>('NODE_ENV') !== 'production';
+          syncEnv === 'true' ||
+          (onVercel && syncEnv !== 'false') ||
+          (config.get<string>('NODE_ENV') !== 'production' &&
+            syncEnv !== 'false');
 
         const dbUrl =
           config.get<string>('POSTGRES_URL') ||
@@ -38,7 +42,6 @@ import { DatabaseBootstrapService } from './database/database-bootstrap.service'
             url: dbUrl,
             autoLoadEntities: true,
             synchronize,
-            ssl: { rejectUnauthorized: false },
             extra: { max: 1 },
           };
         }
