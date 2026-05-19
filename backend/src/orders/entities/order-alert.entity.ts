@@ -43,7 +43,7 @@ export class OrderAlert {
   @Column({ type: 'text', nullable: true })
   staffNote?: string;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   resolvedAt?: Date;
 
   @CreateDateColumn()

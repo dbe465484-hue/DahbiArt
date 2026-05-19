@@ -70,10 +70,10 @@ export class Order {
   @Column({ nullable: true, length: 255 })
   stripePaymentIntentId?: string;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   paidAt?: Date;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   shippedAt?: Date;
 
   @Column({ nullable: true, length: 80 })
@@ -85,7 +85,7 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   internalNote?: string;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   refundedAt?: Date;
 
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
