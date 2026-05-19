@@ -92,9 +92,9 @@ Si vous voulez uniquement le catalogue public sur Netlify :
 
 Pas de login, pas d’admin, pas de panier dynamique.
 
-## Alternative : tout sur Vercel + Render
+## Alternative : 100 % Vercel
 
-- **Frontend** : Vercel (Next.js natif, même principe : `NEXT_PUBLIC_API_URL`).
-- **Backend** : Render / Railway.
+- **API** : projet Vercel, root `backend`, base Neon/PlanetScale via Marketplace.
+- **Site** : projet Vercel, root `frontend`, `NEXT_PUBLIC_API_URL` → URL de l’API.
 
-Même schéma : le frontend reste une app qui parle à l’API NestJS.
+Voir **[VERCEL.md](VERCEL.md)**.

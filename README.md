@@ -47,31 +47,20 @@ npm run dev
 
 ## Déployer en production (admin + auth)
 
-**Netlify seul en export statique ne permet pas l’admin ni la connexion** : le build `build:netlify` retire `/admin` et il n’y a pas d’API.
+**Recommandé : tout sur Vercel** — 2 projets (API + site) + base via le Marketplace Vercel (Neon / PlanetScale).
 
-Il faut **deux hébergements** :
+→ Guide pas à pas : **[docs/VERCEL.md](docs/VERCEL.md)**
 
-| Composant | Où l’héberger | Rôle |
-|-----------|---------------|------|
-| `frontend/` | Netlify (Next.js complet) ou Vercel | Site + pages admin (UI) |
-| `backend/` | Render, Railway, VPS… + **MySQL** | API, JWT, base de données |
+| Projet Vercel | Dossier | Rôle |
+|---------------|---------|------|
+| `dahbiart-api` | `backend/` | NestJS + base de données |
+| `dahbiart-web` | `frontend/` | Next.js (`npm run build`) |
 
-Guides déploiement :
+Autres options : [Railway](docs/RAILWAY-DEBUTANT.md), [Netlify + Render](docs/NETLIFY-RENDER.md), [DEPLOIEMENT.md](docs/DEPLOIEMENT.md).
 
-- **[docs/RAILWAY-DEBUTANT.md](docs/RAILWAY-DEBUTANT.md)** — **Railway pour débutants** (erreur « Set root directory »)
-- **[docs/RAILWAY.md](docs/RAILWAY.md)** — Railway détaillé (MySQL + API + site)
-- **[docs/NETLIFY-RENDER.md](docs/NETLIFY-RENDER.md)** — Netlify (front) + Render (API)
-- **[docs/DEPLOIEMENT-RAPIDE.md](docs/DEPLOIEMENT-RAPIDE.md)** — version courte
-- **[docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md)** — architecture générale
+### Netlify (alternative frontend)
 
-### Netlify (recommandé pour le frontend)
-
-Le `netlify.toml` à la racine utilise le plugin **@netlify/plugin-nextjs** et `npm run build` (admin inclus).
-
-1. Déployer d’abord l’API NestJS et noter son URL HTTPS.
-2. Sur Netlify → **Environment variables** : `NEXT_PUBLIC_API_URL` = `https://votre-api.example.com`
-3. Sur le backend : `FRONTEND_URL` = `https://votre-site.netlify.app`
-4. Déployer le site (push Git ou Deploy).
+Le `netlify.toml` à la racine utilise le plugin **@netlify/plugin-nextjs** et `npm run build` (admin inclus). L’API reste à héberger ailleurs (Render, Railway, ou 2ᵉ projet Vercel).
 
 ### Vitrine statique uniquement (sans admin)
 

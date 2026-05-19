@@ -26,16 +26,30 @@ import { OrdersModule } from './orders/orders.module';
           config.get<string>('DB_SYNCHRONIZE') === 'true' ||
           config.get<string>('NODE_ENV') !== 'production';
 
-        const mysqlUrl =
-          config.get<string>('MYSQL_URL') ||
-          config.get<string>('DATABASE_URL');
+        const dbUrl =
+          config.get<string>('POSTGRES_URL') ||
+          config.get<string>('DATABASE_URL') ||
+          config.get<string>('MYSQL_URL');
 
-        if (mysqlUrl) {
+        if (dbUrl?.startsWith('postgres://') || dbUrl?.startsWith('postgresql://')) {
           return {
-            type: 'mysql' as const,
-            url: mysqlUrl,
+            type: 'postgres' as const,
+            url: dbUrl,
             autoLoadEntities: true,
             synchronize,
+            ssl: { rejectUnauthorized: false },
+            extra: { max: 1 },
+          };
+        }
+
+        if (dbUrl) {
+          return {
+            type: 'mysql' as const,
+            url: dbUrl,
+            autoLoadEntities: true,
+            synchronize,
+            ssl: dbUrl.includes('ssl') ? { rejectUnauthorized: true } : undefined,
+            extra: { connectionLimit: 1 },
           };
         }
 
