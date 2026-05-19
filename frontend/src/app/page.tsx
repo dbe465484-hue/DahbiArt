@@ -13,6 +13,8 @@ import {
   getPaintings,
 } from "@/lib/paintings";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const paintings = await getPaintings();
   const featured = getFeatured(paintings);

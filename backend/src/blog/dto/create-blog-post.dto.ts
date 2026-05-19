@@ -23,7 +23,7 @@ export class CreateBlogPostDto {
   content: string;
 
   @IsString()
-  @MaxLength(1000)
+  @MaxLength(2048)
   image: string;
 
   @IsDateString()

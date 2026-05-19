@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { EventInput, EventRecord } from "@/lib/api";
+import { eventPayload } from "@/lib/admin-form-payloads";
 
 type Props = {
   initial?: EventRecord;
@@ -33,10 +34,7 @@ export function EventForm({ initial, onSubmit, submitLabel }: Props) {
     setError(null);
     setLoading(true);
     try {
-      await onSubmit({
-        ...form,
-        description: form.description?.trim() || undefined,
-      });
+      await onSubmit(eventPayload(form));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
     } finally {

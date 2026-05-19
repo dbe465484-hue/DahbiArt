@@ -48,7 +48,7 @@ export class CreatePaintingDto {
   @Min(0)
   printPrice?: number;
 
-  @MaxLength(1000)
+  @MaxLength(2048)
   image: string;
 
   @IsString()

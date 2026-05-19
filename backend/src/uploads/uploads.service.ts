@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { put } from '@vercel/blob';
+import { existsSync } from 'fs';
 import * as fs from 'fs';
 import * as path from 'path';
 import sharp from 'sharp';
@@ -28,9 +29,16 @@ export class UploadsService {
 
   constructor(config: ConfigService) {
     const configured = config.get<string>('UPLOAD_PUBLIC_DIR');
-    this.publicRoot = configured
-      ? path.resolve(configured)
-      : path.resolve(process.cwd(), '../frontend/public');
+    if (configured) {
+      this.publicRoot = path.resolve(configured);
+    } else {
+      const candidates = [
+        path.resolve(process.cwd(), '../frontend/public'),
+        path.resolve(process.cwd(), 'frontend/public'),
+      ];
+      this.publicRoot =
+        candidates.find((dir) => existsSync(dir)) ?? candidates[0];
+    }
     this.useBlob = Boolean(
       config.get<string>('BLOB_READ_WRITE_TOKEN') ||
         process.env.BLOB_READ_WRITE_TOKEN,

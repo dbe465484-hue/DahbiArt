@@ -173,6 +173,7 @@ export type BlogPostRecord = BlogPostInput & {
   slug: string;
   createdAt?: string;
   updatedAt?: string;
+  deletedAt?: string | null;
 };
 
 export type EventInput = {
@@ -187,6 +188,7 @@ export type EventRecord = EventInput & {
   id: string;
   createdAt?: string;
   updatedAt?: string;
+  deletedAt?: string | null;
 };
 
 export type PaintingInput = {
@@ -213,7 +215,14 @@ export type PaintingRecord = PaintingInput & {
   slug: string;
   createdAt?: string;
   updatedAt?: string;
+  deletedAt?: string | null;
 };
+
+export type AdminListOptions = { includeDeleted?: boolean };
+
+function adminListPath(path: string, opts?: AdminListOptions): string {
+  return opts?.includeDeleted ? `${path}?includeDeleted=true` : path;
+}
 
 export type AuthResponse = {
   user: AuthUser;
@@ -320,11 +329,19 @@ async function uploadRequest(
   form.append("file", file);
   form.append("slug", slug);
 
-  const res = await fetch(`${API_URL}${path}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: form,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+  } catch {
+    throw new ApiError(
+      "Impossible de joindre le serveur. Vérifiez que l’API est démarrée (npm run start:dev dans backend).",
+      0,
+    );
+  }
 
   if (!res.ok) {
     let message = "Échec de l’upload";
@@ -388,7 +405,8 @@ export const api = {
     uploadImage: (token: string, kind: "painting" | "blog", file: File, slug: string) =>
       uploadRequest(`/admin/uploads/${kind}`, token, file, slug),
     paintings: {
-      list: (token: string) => request<PaintingRecord[]>("/admin/paintings", { token }),
+      list: (token: string, opts?: AdminListOptions) =>
+        request<PaintingRecord[]>(adminListPath("/admin/paintings", opts), { token }),
       get: (token: string, id: string) =>
         request<PaintingRecord>(`/admin/paintings/${id}`, { token }),
       create: (token: string, data: PaintingInput) =>
@@ -405,6 +423,8 @@ export const api = {
         }),
       delete: (token: string, id: string) =>
         request<{ ok: boolean }>(`/admin/paintings/${id}`, { method: "DELETE", token }),
+      restore: (token: string, id: string) =>
+        request<PaintingRecord>(`/admin/paintings/${id}/restore`, { method: "POST", token }),
       syncCatalog: (token: string) =>
         request<{ created: number; already: number; total: number; errors: string[] }>(
           "/admin/paintings/sync-catalog",
@@ -412,7 +432,8 @@ export const api = {
         ),
     },
     blogPosts: {
-      list: (token: string) => request<BlogPostRecord[]>("/admin/blog-posts", { token }),
+      list: (token: string, opts?: AdminListOptions) =>
+        request<BlogPostRecord[]>(adminListPath("/admin/blog-posts", opts), { token }),
       get: (token: string, id: string) =>
         request<BlogPostRecord>(`/admin/blog-posts/${id}`, { token }),
       create: (token: string, data: BlogPostInput) =>
@@ -429,9 +450,12 @@ export const api = {
         }),
       delete: (token: string, id: string) =>
         request<{ ok: boolean }>(`/admin/blog-posts/${id}`, { method: "DELETE", token }),
+      restore: (token: string, id: string) =>
+        request<BlogPostRecord>(`/admin/blog-posts/${id}/restore`, { method: "POST", token }),
     },
     events: {
-      list: (token: string) => request<EventRecord[]>("/admin/events", { token }),
+      list: (token: string, opts?: AdminListOptions) =>
+        request<EventRecord[]>(adminListPath("/admin/events", opts), { token }),
       get: (token: string, id: string) =>
         request<EventRecord>(`/admin/events/${id}`, { token }),
       create: (token: string, data: EventInput) =>
@@ -448,6 +472,8 @@ export const api = {
         }),
       delete: (token: string, id: string) =>
         request<{ ok: boolean }>(`/admin/events/${id}`, { method: "DELETE", token }),
+      restore: (token: string, id: string) =>
+        request<EventRecord>(`/admin/events/${id}/restore`, { method: "POST", token }),
     },
     users: {
       list: (token: string) => request<UserRecord[]>("/admin/users", { token }),
@@ -501,7 +527,8 @@ export const api = {
     uploadImage: (token: string, file: File, slug: string) =>
       uploadRequest("/studio/uploads/blog", token, file, slug),
     blogPosts: {
-      list: (token: string) => request<BlogPostRecord[]>("/studio/blog-posts", { token }),
+      list: (token: string, opts?: AdminListOptions) =>
+        request<BlogPostRecord[]>(adminListPath("/studio/blog-posts", opts), { token }),
       get: (token: string, id: string) =>
         request<BlogPostRecord>(`/studio/blog-posts/${id}`, { token }),
       create: (token: string, data: BlogPostInput) =>
@@ -518,9 +545,12 @@ export const api = {
         }),
       delete: (token: string, id: string) =>
         request<{ ok: boolean }>(`/studio/blog-posts/${id}`, { method: "DELETE", token }),
+      restore: (token: string, id: string) =>
+        request<BlogPostRecord>(`/studio/blog-posts/${id}/restore`, { method: "POST", token }),
     },
     events: {
-      list: (token: string) => request<EventRecord[]>("/studio/events", { token }),
+      list: (token: string, opts?: AdminListOptions) =>
+        request<EventRecord[]>(adminListPath("/studio/events", opts), { token }),
       get: (token: string, id: string) =>
         request<EventRecord>(`/studio/events/${id}`, { token }),
       create: (token: string, data: EventInput) =>
@@ -537,6 +567,8 @@ export const api = {
         }),
       delete: (token: string, id: string) =>
         request<{ ok: boolean }>(`/studio/events/${id}`, { method: "DELETE", token }),
+      restore: (token: string, id: string) =>
+        request<EventRecord>(`/studio/events/${id}/restore`, { method: "POST", token }),
     },
   },
 

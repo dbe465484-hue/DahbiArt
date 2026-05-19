@@ -50,3 +50,5 @@ next-env.d.ts
 
 # Vidéo source hero (copie dans frontend/public/videos/)
 /headervid/
+
+.vercel

@@ -47,8 +47,11 @@ export class BlogPostsService {
     return this.serialize(p);
   }
 
-  async findAll() {
-    const rows = await this.repo.find({ order: { publishedAt: 'DESC' } });
+  async findAll(options?: { includeDeleted?: boolean }) {
+    const rows = await this.repo.find({
+      order: { publishedAt: 'DESC' },
+      ...(options?.includeDeleted ? { withDeleted: true } : {}),
+    });
     return rows.map((p) => this.serialize(p));
   }
 
@@ -63,7 +66,10 @@ export class BlogPostsService {
     let n = 0;
     while (true) {
       const candidate = n === 0 ? slug : `${slug}-${n}`;
-      const existing = await this.repo.findOne({ where: { slug: candidate } });
+      const existing = await this.repo.findOne({
+        where: { slug: candidate },
+        withDeleted: true,
+      });
       if (!existing || existing.id === excludeId) return candidate;
       n++;
     }
@@ -91,23 +97,31 @@ export class BlogPostsService {
 
     const wasPublished = post.published;
 
-    if (dto.title || dto.slug) {
-      post.slug = await this.uniqueSlug(
-        dto.slug?.trim() || dto.title || post.title,
-        id,
-      );
+    if (dto.title != null && dto.title !== post.title) {
+      post.slug = await this.uniqueSlug(dto.title, id);
+    } else if (dto.slug?.trim() && dto.slug.trim() !== post.slug) {
+      post.slug = await this.uniqueSlug(dto.slug.trim(), id);
     }
 
-    Object.assign(post, { ...dto, slug: post.slug });
+    const { slug: _slug, ...rest } = dto;
+    Object.assign(post, { ...rest, slug: post.slug });
     const saved = await this.repo.save(post);
     await this.notifyIfPublished(saved, wasPublished);
     return this.serialize(saved);
   }
 
   async remove(id: string) {
-    const result = await this.repo.delete(id);
+    const result = await this.repo.softDelete(id);
     if (!result.affected) throw new NotFoundException('Article introuvable');
     return { ok: true };
+  }
+
+  async restore(id: string) {
+    const result = await this.repo.restore(id);
+    if (!result.affected) throw new NotFoundException('Article introuvable');
+    const post = await this.repo.findOne({ where: { id } });
+    if (!post) throw new NotFoundException('Article introuvable');
+    return this.serialize(post);
   }
 
   async count() {

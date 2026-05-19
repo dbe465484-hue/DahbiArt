@@ -5,6 +5,8 @@ import { getPaintings } from "@/lib/paintings";
 
 export const metadata = { title: "Toutes les peintures" };
 
+export const dynamic = "force-dynamic";
+
 export default async function AllPaintingsPage() {
   const paintings = await getPaintings();
 

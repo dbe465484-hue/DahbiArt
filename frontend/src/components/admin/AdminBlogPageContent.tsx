@@ -8,12 +8,13 @@ import { AdminDataTable } from "@/components/admin/AdminDataTable";
 import { AdminKpiGrid, AdminKpiSkeleton } from "@/components/admin/AdminKpi";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminRowActionsMenu } from "@/components/admin/AdminRowActionsMenu";
+import { AdminShowDeletedCheckbox } from "@/components/admin/AdminShowDeletedCheckbox";
 import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import { api, type BlogPostRecord } from "@/lib/api";
 import { formatFrenchDate } from "@/lib/format-date";
 import { resolveMediaUrl } from "@/lib/media";
-import { slugify } from "@/lib/slugify";
+import { isDeleted } from "@/lib/soft-delete";
 
 type Props = { mode?: "admin" | "studio" };
 
@@ -25,8 +26,9 @@ export function AdminBlogPageContent({ mode = "admin" }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const [statusId, setStatusId] = useState<string | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   const load = useCallback(async () => {
     const token = getToken();
@@ -34,43 +36,25 @@ export function AdminBlogPageContent({ mode = "admin" }: Props) {
     setLoading(true);
     setError(null);
     try {
-      setPosts(await blogApi.list(token));
+      setPosts(await blogApi.list(token, { includeDeleted: showDeleted }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, [blogApi, getToken, showDeleted]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const summary = useMemo(() => {
-    const published = posts.filter((p) => p.published !== false).length;
-    const drafts = posts.filter((p) => p.published === false).length;
-    return { total: posts.length, published, drafts };
-  }, [posts]);
+  const activePosts = useMemo(() => posts.filter((p) => !isDeleted(p)), [posts]);
 
-  async function handleDuplicate(p: BlogPostRecord) {
-    const token = getToken();
-    if (!token) return;
-    setDuplicatingId(p.id);
-    try {
-      const { id: _id, slug: _slug, createdAt, updatedAt, ...data } = p;
-      const created = await blogApi.create(token, {
-        ...data,
-        title: `${p.title} (copie)`,
-        slug: slugify(`${p.slug}-copie-${Date.now().toString(36).slice(-4)}`),
-        published: false,
-      });
-      setPosts((prev) => [created, ...prev]);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Erreur");
-    } finally {
-      setDuplicatingId(null);
-    }
-  }
+  const summary = useMemo(() => {
+    const published = activePosts.filter((p) => p.published !== false).length;
+    const drafts = activePosts.filter((p) => p.published === false).length;
+    return { total: activePosts.length, published, drafts };
+  }, [activePosts]);
 
   async function handlePublishedChange(id: string, published: boolean) {
     const token = getToken();
@@ -86,14 +70,36 @@ export function AdminBlogPageContent({ mode = "admin" }: Props) {
     }
   }
 
+  async function handleRestore(id: string) {
+    const token = getToken();
+    if (!token) return;
+    setRestoringId(id);
+    try {
+      const restored = await blogApi.restore(token, id);
+      setPosts((prev) => prev.map((p) => (p.id === id ? restored : p)));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setRestoringId(null);
+    }
+  }
+
   async function handleDelete(id: string, title: string) {
-    if (!confirm(`Supprimer « ${title} » ?`)) return;
+    if (!confirm(`Mettre « ${title} » à la corbeille ?`)) return;
     const token = getToken();
     if (!token) return;
     setDeletingId(id);
     try {
       await blogApi.delete(token, id);
-      setPosts((prev) => prev.filter((p) => p.id !== id));
+      if (showDeleted) {
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === id ? { ...p, deletedAt: new Date().toISOString() } : p,
+          ),
+        );
+      } else {
+        setPosts((prev) => prev.filter((p) => p.id !== id));
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : "Erreur");
     } finally {
@@ -165,6 +171,9 @@ export function AdminBlogPageContent({ mode = "admin" }: Props) {
       <AdminDataTable
         rows={posts}
         isLoading={loading}
+        headerActions={
+          <AdminShowDeletedCheckbox checked={showDeleted} onChange={setShowDeleted} />
+        }
         getRowKey={(p) => p.id}
         getSearchText={(p) => `${p.title} ${p.slug} ${p.excerpt}`}
         searchPlaceholder="Rechercher un article, slug, extrait…"
@@ -229,12 +238,15 @@ export function AdminBlogPageContent({ mode = "admin" }: Props) {
             id: "status",
             header: "Statut",
             sortValue: (p) => (p.published === false ? 0 : 1),
-            cell: (p) => (
-              <AdminStatusBadge
-                label={p.published === false ? "Brouillon" : "Publié"}
-                tone={p.published === false ? "warning" : "success"}
-              />
-            ),
+            cell: (p) =>
+              isDeleted(p) ? (
+                <AdminStatusBadge label="Supprimé" tone="muted" />
+              ) : (
+                <AdminStatusBadge
+                  label={p.published === false ? "Brouillon" : "Publié"}
+                  tone={p.published === false ? "warning" : "success"}
+                />
+              ),
           },
           {
             id: "actions",
@@ -242,24 +254,31 @@ export function AdminBlogPageContent({ mode = "admin" }: Props) {
             className: "w-12 text-right",
             cell: (p) => (
               <AdminRowActionsMenu
-                viewHref={p.published !== false ? `/blog/${p.slug}` : undefined}
-                editHref={`${base}/${p.id}/edit`}
-                onDuplicate={() => handleDuplicate(p)}
-                duplicateLoading={duplicatingId === p.id}
+                isDeleted={isDeleted(p)}
+                viewHref={
+                  isDeleted(p) || p.published === false ? undefined : `/blog/${p.slug}`
+                }
+                editHref={isDeleted(p) ? undefined : `${base}/${p.id}/edit`}
                 statusLoading={statusId === p.id}
-                statusOptions={[
-                  {
-                    label: "Publié",
-                    active: p.published !== false,
-                    onSelect: () => handlePublishedChange(p.id, true),
-                  },
-                  {
-                    label: "Brouillon",
-                    active: p.published === false,
-                    onSelect: () => handlePublishedChange(p.id, false),
-                  },
-                ]}
-                onDelete={() => handleDelete(p.id, p.title)}
+                statusOptions={
+                  isDeleted(p)
+                    ? []
+                    : [
+                        {
+                          label: "Publié",
+                          active: p.published !== false,
+                          onSelect: () => handlePublishedChange(p.id, true),
+                        },
+                        {
+                          label: "Brouillon",
+                          active: p.published === false,
+                          onSelect: () => handlePublishedChange(p.id, false),
+                        },
+                      ]
+                }
+                onRestore={isDeleted(p) ? () => handleRestore(p.id) : undefined}
+                restoreLoading={restoringId === p.id}
+                onDelete={isDeleted(p) ? undefined : () => handleDelete(p.id, p.title)}
                 deleteLoading={deletingId === p.id}
               />
             ),

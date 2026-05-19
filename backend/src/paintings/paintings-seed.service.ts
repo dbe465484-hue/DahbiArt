@@ -36,7 +36,7 @@ export class PaintingsSeedService implements OnModuleInit {
     return paintings;
   }
 
-  async syncCatalog(): Promise<CatalogSyncResult> {
+  async syncCatalog(options?: { removeOrphans?: boolean }): Promise<CatalogSyncResult> {
     const paintings = this.loadSeedItems();
     let created = 0;
     let updated = 0;
@@ -57,14 +57,24 @@ export class PaintingsSeedService implements OnModuleInit {
     }
 
     let removed = 0;
-    try {
-      removed = await this.paintings.removeOrphans(paintings.map((p) => p.slug));
-      if (removed > 0) {
-        this.logger.log(`${removed} ancienne(s) fiche(s) retirée(s) (hors catalogue)`);
+    const shouldRemoveOrphans =
+      options?.removeOrphans === true ||
+      process.env.SEED_REMOVE_ORPHANS === 'true';
+
+    if (shouldRemoveOrphans) {
+      try {
+        removed = await this.paintings.removeOrphans(
+          paintings.map((p) => p.slug),
+        );
+        if (removed > 0) {
+          this.logger.log(
+            `${removed} ancienne(s) fiche(s) retirée(s) (hors catalogue seed)`,
+          );
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`orphans: ${msg}`);
       }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      errors.push(`orphans: ${msg}`);
     }
 
     already = Math.max(0, paintings.length - created - updated);
@@ -81,7 +91,7 @@ export class PaintingsSeedService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      const result = await this.syncCatalog();
+      const result = await this.syncCatalog({ removeOrphans: false });
       if (result.created > 0 || result.updated > 0 || result.removed > 0) {
         this.logger.log(
           `Catalogue : ${result.created} créé(s), ${result.updated} mis à jour, ${result.removed} retiré(s) (${result.total} œuvres)`,

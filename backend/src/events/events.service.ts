@@ -24,8 +24,11 @@ export class EventsService {
     return rows.map((e) => this.serialize(e));
   }
 
-  async findAll() {
-    const rows = await this.repo.find({ order: { eventDate: 'ASC' } });
+  async findAll(options?: { includeDeleted?: boolean }) {
+    const rows = await this.repo.find({
+      order: { eventDate: 'ASC' },
+      ...(options?.includeDeleted ? { withDeleted: true } : {}),
+    });
     return rows.map((e) => this.serialize(e));
   }
 
@@ -51,9 +54,17 @@ export class EventsService {
   }
 
   async remove(id: string) {
-    const result = await this.repo.delete(id);
+    const result = await this.repo.softDelete(id);
     if (!result.affected) throw new NotFoundException('Événement introuvable');
     return { ok: true };
+  }
+
+  async restore(id: string) {
+    const result = await this.repo.restore(id);
+    if (!result.affected) throw new NotFoundException('Événement introuvable');
+    const event = await this.repo.findOne({ where: { id } });
+    if (!event) throw new NotFoundException('Événement introuvable');
+    return this.serialize(event);
   }
 
   async count() {

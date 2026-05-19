@@ -8,12 +8,13 @@ import { AdminDataTable } from "@/components/admin/AdminDataTable";
 import { AdminKpiGrid, AdminKpiSkeleton } from "@/components/admin/AdminKpi";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminRowActionsMenu } from "@/components/admin/AdminRowActionsMenu";
+import { AdminShowDeletedCheckbox } from "@/components/admin/AdminShowDeletedCheckbox";
 import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import { api, type PaintingRecord } from "@/lib/api";
 import { resolveMediaUrl } from "@/lib/media";
 import { formatPrice } from "@/lib/paintings";
-import { slugify } from "@/lib/slugify";
+import { isDeleted } from "@/lib/soft-delete";
 
 function IconImport() {
   return (
@@ -29,8 +30,9 @@ export function AdminPaintingsPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const [statusId, setStatusId] = useState<string | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
   const load = useCallback(async () => {
@@ -39,24 +41,30 @@ export function AdminPaintingsPageContent() {
     setLoading(true);
     setError(null);
     try {
-      setPaintings(await api.admin.paintings.list(token));
+      setPaintings(await api.admin.paintings.list(token, { includeDeleted: showDeleted }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, showDeleted]);
 
   useEffect(() => {
     load();
   }, [load]);
 
+  const activePaintings = useMemo(
+    () => paintings.filter((p) => !isDeleted(p)),
+    [paintings],
+  );
+
   const summary = useMemo(() => {
-    const available = paintings.filter((p) => p.status === "available").length;
-    const sold = paintings.filter((p) => p.status === "sold").length;
-    const featured = paintings.filter((p) => p.featured).length;
-    return { total: paintings.length, available, sold, featured };
-  }, [paintings]);
+    const available = activePaintings.filter((p) => p.status === "available").length;
+    const sold = activePaintings.filter((p) => p.status === "sold").length;
+    const featured = activePaintings.filter((p) => p.featured).length;
+    const deleted = paintings.length - activePaintings.length;
+    return { total: activePaintings.length, available, sold, featured, deleted };
+  }, [paintings, activePaintings]);
 
   async function handleSyncCatalog() {
     const token = getToken();
@@ -78,26 +86,6 @@ export function AdminPaintingsPageContent() {
     }
   }
 
-  async function handleDuplicate(p: PaintingRecord) {
-    const token = getToken();
-    if (!token) return;
-    setDuplicatingId(p.id);
-    try {
-      const { id: _id, slug: _slug, createdAt, updatedAt, ...data } = p;
-      const copySlug = slugify(`${p.slug}-copie-${Date.now().toString(36).slice(-4)}`);
-      const created = await api.admin.paintings.create(token, {
-        ...data,
-        title: `${p.title} (copie)`,
-        slug: copySlug,
-      });
-      setPaintings((prev) => [created, ...prev]);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Erreur");
-    } finally {
-      setDuplicatingId(null);
-    }
-  }
-
   async function handleStatusChange(id: string, status: "available" | "sold") {
     const token = getToken();
     if (!token) return;
@@ -112,14 +100,36 @@ export function AdminPaintingsPageContent() {
     }
   }
 
+  async function handleRestore(id: string) {
+    const token = getToken();
+    if (!token) return;
+    setRestoringId(id);
+    try {
+      const restored = await api.admin.paintings.restore(token, id);
+      setPaintings((prev) => prev.map((p) => (p.id === id ? restored : p)));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setRestoringId(null);
+    }
+  }
+
   async function handleDelete(id: string, title: string) {
-    if (!confirm(`Supprimer « ${title} » ?`)) return;
+    if (!confirm(`Mettre « ${title} » à la corbeille ?`)) return;
     const token = getToken();
     if (!token) return;
     setDeletingId(id);
     try {
       await api.admin.paintings.delete(token, id);
-      setPaintings((prev) => prev.filter((p) => p.id !== id));
+      if (showDeleted) {
+        setPaintings((prev) =>
+          prev.map((p) =>
+            p.id === id ? { ...p, deletedAt: new Date().toISOString() } : p,
+          ),
+        );
+      } else {
+        setPaintings((prev) => prev.filter((p) => p.id !== id));
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : "Erreur");
     } finally {
@@ -209,6 +219,9 @@ export function AdminPaintingsPageContent() {
       <AdminDataTable
         rows={paintings}
         isLoading={loading}
+        headerActions={
+          <AdminShowDeletedCheckbox checked={showDeleted} onChange={setShowDeleted} />
+        }
         getRowKey={(p) => p.id}
         getSearchText={(p) =>
           `${p.title} ${p.slug} ${p.collection} ${p.subject} ${p.year} ${p.medium}`
@@ -293,10 +306,16 @@ export function AdminPaintingsPageContent() {
             header: "Statut",
             sortValue: (p) => p.status,
             cell: (p) => (
-              <AdminStatusBadge
-                label={p.status === "available" ? "Disponible" : "Vendu"}
-                tone={p.status === "available" ? "success" : "muted"}
-              />
+              <div className="flex flex-wrap gap-1.5">
+                {isDeleted(p) ? (
+                  <AdminStatusBadge label="Supprimé" tone="muted" />
+                ) : (
+                  <AdminStatusBadge
+                    label={p.status === "available" ? "Disponible" : "Vendu"}
+                    tone={p.status === "available" ? "success" : "muted"}
+                  />
+                )}
+              </div>
             ),
           },
           {
@@ -305,24 +324,29 @@ export function AdminPaintingsPageContent() {
             className: "w-12 text-right",
             cell: (p) => (
               <AdminRowActionsMenu
-                viewHref={`/paintings/${p.slug}`}
-                editHref={`/admin/paintings/${p.id}/edit`}
-                onDuplicate={() => handleDuplicate(p)}
-                duplicateLoading={duplicatingId === p.id}
+                isDeleted={isDeleted(p)}
+                viewHref={isDeleted(p) ? undefined : `/paintings/${p.slug}`}
+                editHref={isDeleted(p) ? undefined : `/admin/paintings/${p.id}/edit`}
                 statusLoading={statusId === p.id}
-                statusOptions={[
-                  {
-                    label: "Disponible",
-                    active: p.status === "available",
-                    onSelect: () => handleStatusChange(p.id, "available"),
-                  },
-                  {
-                    label: "Vendu",
-                    active: p.status === "sold",
-                    onSelect: () => handleStatusChange(p.id, "sold"),
-                  },
-                ]}
-                onDelete={() => handleDelete(p.id, p.title)}
+                statusOptions={
+                  isDeleted(p)
+                    ? []
+                    : [
+                        {
+                          label: "Disponible",
+                          active: p.status === "available",
+                          onSelect: () => handleStatusChange(p.id, "available"),
+                        },
+                        {
+                          label: "Vendu",
+                          active: p.status === "sold",
+                          onSelect: () => handleStatusChange(p.id, "sold"),
+                        },
+                      ]
+                }
+                onRestore={isDeleted(p) ? () => handleRestore(p.id) : undefined}
+                restoreLoading={restoringId === p.id}
+                onDelete={isDeleted(p) ? undefined : () => handleDelete(p.id, p.title)}
                 deleteLoading={deletingId === p.id}
               />
             ),

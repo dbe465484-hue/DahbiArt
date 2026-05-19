@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -171,8 +172,10 @@ export class AdminController {
   }
 
   @Get('paintings')
-  listPaintings() {
-    return this.paintings.findAll();
+  listPaintings(@Query('includeDeleted') includeDeleted?: string) {
+    return this.paintings.findAll({
+      includeDeleted: includeDeleted === 'true',
+    });
   }
 
   @Get('paintings/:id')
@@ -201,9 +204,16 @@ export class AdminController {
     return this.paintings.remove(id);
   }
 
+  @Post('paintings/:id/restore')
+  restorePainting(@Param('id') id: string) {
+    return this.paintings.restore(id);
+  }
+
   @Get('blog-posts')
-  listBlogPosts() {
-    return this.blog.findAll();
+  listBlogPosts(@Query('includeDeleted') includeDeleted?: string) {
+    return this.blog.findAll({
+      includeDeleted: includeDeleted === 'true',
+    });
   }
 
   @Get('blog-posts/:id')
@@ -226,9 +236,16 @@ export class AdminController {
     return this.blog.remove(id);
   }
 
+  @Post('blog-posts/:id/restore')
+  restoreBlogPost(@Param('id') id: string) {
+    return this.blog.restore(id);
+  }
+
   @Get('events')
-  listEvents() {
-    return this.events.findAll();
+  listEvents(@Query('includeDeleted') includeDeleted?: string) {
+    return this.events.findAll({
+      includeDeleted: includeDeleted === 'true',
+    });
   }
 
   @Get('events/:id')
@@ -249,5 +266,10 @@ export class AdminController {
   @Delete('events/:id')
   deleteEvent(@Param('id') id: string) {
     return this.events.remove(id);
+  }
+
+  @Post('events/:id/restore')
+  restoreEvent(@Param('id') id: string) {
+    return this.events.restore(id);
   }
 }

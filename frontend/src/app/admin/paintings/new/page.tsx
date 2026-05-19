@@ -14,6 +14,7 @@ export default function AdminNewPaintingPage() {
     if (!token) throw new Error("Non authentifié");
     await api.admin.paintings.create(token, data);
     router.push("/admin/paintings");
+    router.refresh();
   }
 
   return (

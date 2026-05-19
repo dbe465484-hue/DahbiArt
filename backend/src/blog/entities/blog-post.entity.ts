@@ -1,6 +1,7 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -23,7 +24,7 @@ export class BlogPost {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ length: 1000 })
+  @Column({ length: 2048 })
   image: string;
 
   @Column({ type: 'date' })
@@ -37,4 +38,7 @@ export class BlogPost {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

@@ -7,10 +7,12 @@ import { AdminDataTable } from "@/components/admin/AdminDataTable";
 import { AdminKpiGrid, AdminKpiSkeleton } from "@/components/admin/AdminKpi";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminRowActionsMenu } from "@/components/admin/AdminRowActionsMenu";
+import { AdminShowDeletedCheckbox } from "@/components/admin/AdminShowDeletedCheckbox";
 import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import { api, type EventRecord } from "@/lib/api";
 import { formatFrenchDate } from "@/lib/format-date";
+import { isDeleted } from "@/lib/soft-delete";
 
 function isUpcoming(dateStr: string) {
   const d = new Date(dateStr);
@@ -29,8 +31,9 @@ export function AdminEventsPageContent({ mode = "admin" }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const [statusId, setStatusId] = useState<string | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   const load = useCallback(async () => {
     const token = getToken();
@@ -38,43 +41,26 @@ export function AdminEventsPageContent({ mode = "admin" }: Props) {
     setLoading(true);
     setError(null);
     try {
-      setEvents(await eventsApi.list(token));
+      setEvents(await eventsApi.list(token, { includeDeleted: showDeleted }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, [eventsApi, getToken, showDeleted]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const summary = useMemo(() => {
-    const published = events.filter((e) => e.published !== false).length;
-    const hidden = events.filter((e) => e.published === false).length;
-    const upcoming = events.filter((e) => isUpcoming(e.eventDate)).length;
-    return { total: events.length, published, hidden, upcoming };
-  }, [events]);
+  const activeEvents = useMemo(() => events.filter((e) => !isDeleted(e)), [events]);
 
-  async function handleDuplicate(e: EventRecord) {
-    const token = getToken();
-    if (!token) return;
-    setDuplicatingId(e.id);
-    try {
-      const { id: _id, createdAt, updatedAt, ...data } = e;
-      const created = await eventsApi.create(token, {
-        ...data,
-        title: `${e.title} (copie)`,
-        published: false,
-      });
-      setEvents((prev) => [created, ...prev]);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Erreur");
-    } finally {
-      setDuplicatingId(null);
-    }
-  }
+  const summary = useMemo(() => {
+    const published = activeEvents.filter((e) => e.published !== false).length;
+    const hidden = activeEvents.filter((e) => e.published === false).length;
+    const upcoming = activeEvents.filter((e) => isUpcoming(e.eventDate)).length;
+    return { total: activeEvents.length, published, hidden, upcoming };
+  }, [activeEvents]);
 
   async function handlePublishedChange(id: string, published: boolean) {
     const token = getToken();
@@ -90,14 +76,36 @@ export function AdminEventsPageContent({ mode = "admin" }: Props) {
     }
   }
 
+  async function handleRestore(id: string) {
+    const token = getToken();
+    if (!token) return;
+    setRestoringId(id);
+    try {
+      const restored = await eventsApi.restore(token, id);
+      setEvents((prev) => prev.map((e) => (e.id === id ? restored : e)));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Erreur");
+    } finally {
+      setRestoringId(null);
+    }
+  }
+
   async function handleDelete(id: string, title: string) {
-    if (!confirm(`Supprimer « ${title} » ?`)) return;
+    if (!confirm(`Mettre « ${title} » à la corbeille ?`)) return;
     const token = getToken();
     if (!token) return;
     setDeletingId(id);
     try {
       await eventsApi.delete(token, id);
-      setEvents((prev) => prev.filter((e) => e.id !== id));
+      if (showDeleted) {
+        setEvents((prev) =>
+          prev.map((e) =>
+            e.id === id ? { ...e, deletedAt: new Date().toISOString() } : e,
+          ),
+        );
+      } else {
+        setEvents((prev) => prev.filter((e) => e.id !== id));
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : "Erreur");
     } finally {
@@ -176,6 +184,9 @@ export function AdminEventsPageContent({ mode = "admin" }: Props) {
       <AdminDataTable
         rows={events}
         isLoading={loading}
+        headerActions={
+          <AdminShowDeletedCheckbox checked={showDeleted} onChange={setShowDeleted} />
+        }
         getRowKey={(e) => e.id}
         getSearchText={(e) => `${e.title} ${e.city} ${e.description ?? ""}`}
         searchPlaceholder="Rechercher un événement, ville…"
@@ -231,12 +242,18 @@ export function AdminEventsPageContent({ mode = "admin" }: Props) {
             sortValue: (e) => (e.published === false ? 0 : 1),
             cell: (e) => (
               <div className="flex flex-wrap gap-1.5">
-                <AdminStatusBadge
-                  label={e.published === false ? "Masqué" : "Publié"}
-                  tone={e.published === false ? "muted" : "success"}
-                />
-                {isUpcoming(e.eventDate) && (
-                  <AdminStatusBadge label="À venir" tone="warning" />
+                {isDeleted(e) ? (
+                  <AdminStatusBadge label="Supprimé" tone="muted" />
+                ) : (
+                  <>
+                    <AdminStatusBadge
+                      label={e.published === false ? "Masqué" : "Publié"}
+                      tone={e.published === false ? "muted" : "success"}
+                    />
+                    {isUpcoming(e.eventDate) && (
+                      <AdminStatusBadge label="À venir" tone="warning" />
+                    )}
+                  </>
                 )}
               </div>
             ),
@@ -247,24 +264,29 @@ export function AdminEventsPageContent({ mode = "admin" }: Props) {
             className: "w-12 text-right",
             cell: (e) => (
               <AdminRowActionsMenu
-                viewHref="/calendar"
-                editHref={`${base}/${e.id}/edit`}
-                onDuplicate={() => handleDuplicate(e)}
-                duplicateLoading={duplicatingId === e.id}
+                isDeleted={isDeleted(e)}
+                viewHref={isDeleted(e) ? undefined : "/calendar"}
+                editHref={isDeleted(e) ? undefined : `${base}/${e.id}/edit`}
                 statusLoading={statusId === e.id}
-                statusOptions={[
-                  {
-                    label: "Publié",
-                    active: e.published !== false,
-                    onSelect: () => handlePublishedChange(e.id, true),
-                  },
-                  {
-                    label: "Masqué",
-                    active: e.published === false,
-                    onSelect: () => handlePublishedChange(e.id, false),
-                  },
-                ]}
-                onDelete={() => handleDelete(e.id, e.title)}
+                statusOptions={
+                  isDeleted(e)
+                    ? []
+                    : [
+                        {
+                          label: "Publié",
+                          active: e.published !== false,
+                          onSelect: () => handlePublishedChange(e.id, true),
+                        },
+                        {
+                          label: "Masqué",
+                          active: e.published === false,
+                          onSelect: () => handlePublishedChange(e.id, false),
+                        },
+                      ]
+                }
+                onRestore={isDeleted(e) ? () => handleRestore(e.id) : undefined}
+                restoreLoading={restoringId === e.id}
+                onDelete={isDeleted(e) ? undefined : () => handleDelete(e.id, e.title)}
                 deleteLoading={deletingId === e.id}
               />
             ),

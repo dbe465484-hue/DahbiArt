@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { PaintingInput, PaintingRecord } from "@/lib/api";
 import { subjects, locations } from "@/lib/navigation";
 import { collectionOptions } from "@/lib/paintings";
+import { paintingPayload } from "@/lib/admin-form-payloads";
 import { slugify } from "@/lib/slugify";
 import { ImageUploadField } from "./ImageUploadField";
 
@@ -54,11 +55,7 @@ export function PaintingForm({ initial, onSubmit, submitLabel }: Props) {
         setError("Ajoutez une image du tableau");
         return;
       }
-      await onSubmit({
-        ...form,
-        price: Number(form.price),
-        printPrice: form.printAvailable ? Number(form.printPrice ?? 0) : undefined,
-      });
+      await onSubmit(paintingPayload(form));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
     } finally {

@@ -25,8 +25,11 @@ export class PaintingsService {
     };
   }
 
-  async findAll() {
-    const rows = await this.repo.find({ order: { createdAt: 'DESC' } });
+  async findAll(options?: { includeDeleted?: boolean }) {
+    const rows = await this.repo.find({
+      order: { createdAt: 'DESC' },
+      ...(options?.includeDeleted ? { withDeleted: true } : {}),
+    });
     return rows.map((p) => this.serialize(p));
   }
 
@@ -47,7 +50,10 @@ export class PaintingsService {
     let n = 0;
     while (true) {
       const candidate = n === 0 ? slug : `${slug}-${n}`;
-      const existing = await this.repo.findOne({ where: { slug: candidate } });
+      const existing = await this.repo.findOne({
+        where: { slug: candidate },
+        withDeleted: true,
+      });
       if (!existing || existing.id === excludeId) return candidate;
       n++;
     }
@@ -74,26 +80,31 @@ export class PaintingsService {
     const painting = await this.repo.findOne({ where: { id } });
     if (!painting) throw new NotFoundException('Tableau introuvable');
 
-    if (dto.title || dto.slug) {
-      painting.slug = await this.uniqueSlug(
-        dto.slug?.trim() || dto.title || painting.title,
-        id,
-      );
+    if (dto.title != null && dto.title !== painting.title) {
+      painting.slug = await this.uniqueSlug(dto.title, id);
+    } else if (dto.slug?.trim() && dto.slug.trim() !== painting.slug) {
+      painting.slug = await this.uniqueSlug(dto.slug.trim(), id);
     }
 
-    Object.assign(painting, {
-      ...dto,
-      slug: painting.slug,
-    });
+    const { slug: _slug, ...rest } = dto;
+    Object.assign(painting, { ...rest, slug: painting.slug });
 
     const saved = await this.repo.save(painting);
     return this.serialize(saved);
   }
 
   async remove(id: string) {
-    const result = await this.repo.delete(id);
+    const result = await this.repo.softDelete(id);
     if (!result.affected) throw new NotFoundException('Tableau introuvable');
     return { ok: true };
+  }
+
+  async restore(id: string) {
+    const result = await this.repo.restore(id);
+    if (!result.affected) throw new NotFoundException('Tableau introuvable');
+    const painting = await this.repo.findOne({ where: { id } });
+    if (!painting) throw new NotFoundException('Tableau introuvable');
+    return this.serialize(painting);
   }
 
   async count() {

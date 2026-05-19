@@ -1,6 +1,7 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -39,7 +40,7 @@ export class Painting {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   printPrice?: number;
 
-  @Column({ length: 1000 })
+  @Column({ length: 2048 })
   image: string;
 
   @Column({ type: 'text' })
@@ -65,4 +66,7 @@ export class Painting {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

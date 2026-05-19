@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { BlogPostInput, BlogPostRecord } from "@/lib/api";
+import { blogPostPayload } from "@/lib/admin-form-payloads";
 import { slugify } from "@/lib/slugify";
 import { ImageUploadField } from "./ImageUploadField";
 
@@ -46,7 +47,7 @@ export function BlogPostForm({ initial, onSubmit, submitLabel, studio = false }:
         setError("Ajoutez une image à l’article");
         return;
       }
-      await onSubmit(form);
+      await onSubmit(blogPostPayload(form));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
     } finally {

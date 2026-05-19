@@ -13,11 +13,12 @@ export type StatusMenuOption = {
 type Props = {
   viewHref?: string;
   editHref?: string;
-  onDuplicate?: () => void;
-  duplicateLoading?: boolean;
+  isDeleted?: boolean;
   statusOptions?: StatusMenuOption[];
   statusMenuLabel?: string;
   statusLoading?: boolean;
+  onRestore?: () => void;
+  restoreLoading?: boolean;
   onDelete?: () => void;
   deleteLoading?: boolean;
 };
@@ -39,20 +40,19 @@ function IconPencil() {
   );
 }
 
-function IconCopy() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
-      <rect x="9" y="9" width="13" height="13" rx="2" />
-      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-    </svg>
-  );
-}
-
 function IconFile() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
       <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
       <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconUndo() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <path d="M3 10h10a5 5 0 015 5v1M3 10l4-4M3 10l4 4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -65,9 +65,18 @@ function IconTrash() {
   );
 }
 
-function IconChevron() {
+function IconChevron({ open }: { open: boolean }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className={`shrink-0 transition-transform ${open ? "rotate-90" : ""}`}
+      aria-hidden
+    >
       <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -126,11 +135,12 @@ function MenuItemLink({
 export function AdminRowActionsMenu({
   viewHref,
   editHref,
-  onDuplicate,
-  duplicateLoading = false,
+  isDeleted = false,
   statusOptions = [],
   statusMenuLabel = "Changer le statut",
   statusLoading = false,
+  onRestore,
+  restoreLoading = false,
   onDelete,
   deleteLoading = false,
 }: Props) {
@@ -165,7 +175,7 @@ export function AdminRowActionsMenu({
     setStatusOpen(false);
   }
 
-  const busy = duplicateLoading || statusLoading || deleteLoading;
+  const busy = statusLoading || deleteLoading || restoreLoading;
 
   return (
     <div ref={ref} className="relative inline-flex justify-end">
@@ -187,6 +197,22 @@ export function AdminRowActionsMenu({
 
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 min-w-[220px] overflow-hidden rounded-lg border border-stone-200 bg-white py-1 shadow-lg">
+          {isDeleted ? (
+            onRestore && (
+              <MenuItemButton
+                disabled={restoreLoading}
+                onClick={() => {
+                  onRestore();
+                  close();
+                }}
+                className="text-emerald-800 hover:bg-emerald-50"
+              >
+                <IconUndo />
+                {restoreLoading ? "Restauration…" : "Restaurer"}
+              </MenuItemButton>
+            )
+          ) : (
+            <>
           {viewHref && (
             <MenuItemLink href={viewHref} external onNavigate={close}>
               <IconEye />
@@ -201,25 +227,8 @@ export function AdminRowActionsMenu({
             </MenuItemLink>
           )}
 
-          {onDuplicate && (
-            <MenuItemButton
-              disabled={duplicateLoading}
-              onClick={() => {
-                onDuplicate();
-                close();
-              }}
-            >
-              <IconCopy />
-              {duplicateLoading ? "Duplication…" : "Dupliquer"}
-            </MenuItemButton>
-          )}
-
           {statusOptions.length > 0 && (
-            <div
-              className="relative"
-              onMouseEnter={() => setStatusOpen(true)}
-              onMouseLeave={() => setStatusOpen(false)}
-            >
+            <>
               <button
                 type="button"
                 disabled={statusLoading}
@@ -228,11 +237,11 @@ export function AdminRowActionsMenu({
               >
                 <IconFile />
                 <span className="flex-1">{statusMenuLabel}</span>
-                <IconChevron />
+                <IconChevron open={statusOpen} />
               </button>
 
               {statusOpen && (
-                <div className="absolute left-full top-0 z-50 ml-1 min-w-[180px] overflow-hidden rounded-lg border border-stone-200 bg-white py-1 shadow-lg">
+                <div className="border-t border-stone-100 bg-stone-50/80 py-1">
                   {statusOptions.map((opt) => (
                     <MenuItemButton
                       key={opt.label}
@@ -241,7 +250,7 @@ export function AdminRowActionsMenu({
                         opt.onSelect();
                         close();
                       }}
-                      className={opt.active ? "bg-stone-50 font-medium text-stone-900" : ""}
+                      className={`pl-9 ${opt.active ? "font-medium text-stone-900" : ""}`}
                     >
                       {opt.label}
                       {opt.active && <span className="ml-auto text-xs text-stone-400">actuel</span>}
@@ -249,7 +258,7 @@ export function AdminRowActionsMenu({
                   ))}
                 </div>
               )}
-            </div>
+            </>
           )}
 
           {onDelete && (
@@ -265,8 +274,10 @@ export function AdminRowActionsMenu({
                 className="text-red-600 hover:bg-red-50 hover:text-red-700"
               >
                 <IconTrash />
-                {deleteLoading ? "Suppression…" : "Supprimer"}
+                {deleteLoading ? "Suppression…" : "Mettre à la corbeille"}
               </MenuItemButton>
+            </>
+          )}
             </>
           )}
         </div>
