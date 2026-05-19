@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+import { API_URL } from "./api-url";
 
 /** URL affichable pour une image (chemin local, upload API ou URL absolue) */
 export function resolveMediaUrl(path: string): string {

@@ -1,7 +1,7 @@
 import catalog from "@/data/paintings-catalog.json";
 import type { Collection, Painting } from "./types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+import { API_URL } from "./api-url";
 
 /** Images locales (dossier `tableaux/` → `npm run tableaux:sync`) */
 export const paintingImage = (slug: string) => `/paintings/${slug}.webp`;

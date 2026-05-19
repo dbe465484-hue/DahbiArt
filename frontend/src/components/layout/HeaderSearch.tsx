@@ -11,7 +11,7 @@ import {
 } from "@/lib/paintings";
 import type { Painting } from "@/lib/types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+import { API_URL } from "@/lib/api-url";
 
 function staticPaintings(): Painting[] {
   return (catalog.paintings as unknown as Painting[]).map((p) => ({

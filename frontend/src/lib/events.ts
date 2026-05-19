@@ -1,7 +1,7 @@
 import fallback from "@/data/events-fallback.json";
 import { formatFrenchDate } from "./format-date";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+import { API_URL } from "./api-url";
 
 export type CalendarEvent = {
   id?: string;

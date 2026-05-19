@@ -19,6 +19,12 @@ async function bootstrap() {
     new ValidationPipe({ whitelist: true, transform: true }),
   );
 
+  const apiPrefix =
+    process.env.API_ROUTE_PREFIX ?? (process.env.VERCEL ? 'api' : '');
+  if (apiPrefix) {
+    app.setGlobalPrefix(apiPrefix);
+  }
+
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
   console.log(`API Mayn: http://localhost:${port}`);
