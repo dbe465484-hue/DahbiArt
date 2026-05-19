@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+dist/
+build/
+.next/
+out/
+
+# Env (jamais versionner les secrets)
+.env
+.env.local
+.env.*.local
+**/.env
+!**/.env.example
+
+# Backend
+backend/dist/
+backend/coverage/
+
+# Uploads locaux éventuels (les médias du site sont dans frontend/public/)
+backend/uploads/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage/
+
+# Misc
+*.tsbuildinfo
+next-env.d.ts
+
+# Photos sources haute résolution (copie optimisée dans frontend/public/paintings/)
+/tableaux/
+
+# Vidéo source hero (copie dans frontend/public/videos/)
+/headervid/

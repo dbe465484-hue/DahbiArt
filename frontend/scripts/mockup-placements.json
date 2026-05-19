@@ -1,0 +1,14 @@
+{
+  "salon-blanc": { "x": 0.4, "y": 0.22, "width": 0.2, "height": 0.32 },
+  "salon-beige": { "x": 0.38, "y": 0.3, "width": 0.24, "height": 0.34 },
+  "chambre-douce": { "x": 0.38, "y": 0.3, "width": 0.36, "height": 0.22 },
+  "couloir-minimal": { "x": 0.37, "y": 0.32, "width": 0.26, "height": 0.21 },
+  "salle-manger": { "x": 0.39, "y": 0.2, "width": 0.22, "height": 0.3 },
+  "galerie-blanche": { "x": 0.41, "y": 0.27, "width": 0.2, "height": 0.21 },
+  "loft-industriel": { "x": 0.36, "y": 0.22, "width": 0.26, "height": 0.38 },
+  "cafe-chaleureux": { "x": 0.39, "y": 0.22, "width": 0.22, "height": 0.38 },
+  "bureau-moderne": { "x": 0.39, "y": 0.14, "width": 0.22, "height": 0.36 },
+  "hotel-elegant": { "x": 0.4, "y": 0.2, "width": 0.2, "height": 0.34 },
+  "mur-sombre": { "x": 0.38, "y": 0.22, "width": 0.24, "height": 0.38 },
+  "scandinave": { "x": 0.4, "y": 0.2, "width": 0.2, "height": 0.32 }
+}

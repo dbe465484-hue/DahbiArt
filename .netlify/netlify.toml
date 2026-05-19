@@ -1,0 +1,30 @@
+plugins = []
+headers = []
+redirects = []
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "C:\\Users\\RimBelabadia\\Desktop\\Mayn\\frontend\\out"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "cd frontend && npm ci && npm run build:netlify"
+
+[build.environment]
+NODE_VERSION = "20"
+NPM_FLAGS = "--legacy-peer-deps"
+STATIC_EXPORT = "true"
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]

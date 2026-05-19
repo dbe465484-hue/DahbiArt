@@ -1,0 +1,13 @@
+{
+  "name": "Galerie blanche",
+  "placement": {
+    "x": 0.41,
+    "y": 0.27,
+    "width": 0.2,
+    "height": 0.21,
+    "rotation": 0
+  },
+  "wallTone": "#ffffff",
+  "mode": "hang",
+  "feather": 0.012
+}

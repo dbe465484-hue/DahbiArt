@@ -1,0 +1,25 @@
+{
+  "events": [
+    {
+      "title": "Vernissage — Galerie L'Oudaya",
+      "city": "Rabat",
+      "eventDate": "2025-04-18",
+      "description": "Vernissage de la nouvelle collection.",
+      "published": true
+    },
+    {
+      "title": "Marché des arts",
+      "city": "Casablanca",
+      "eventDate": "2025-05-10",
+      "description": "Stand et démonstrations au marché des arts.",
+      "published": true
+    },
+    {
+      "title": "Portes ouvertes de l'atelier",
+      "city": "Rabat",
+      "eventDate": "2025-06-14",
+      "description": "Visite de l'atelier et rencontre avec l'artiste.",
+      "published": true
+    }
+  ]
+}

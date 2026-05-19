@@ -1,0 +1,14 @@
+{
+  "name": "Bureau moderne",
+  "category": "commercial",
+  "mode": "hang",
+  "placement": {
+    "x": 0.39,
+    "y": 0.14,
+    "width": 0.22,
+    "height": 0.36,
+    "rotation": 0
+  },
+  "feather": 0.012,
+  "wallTone": "#e8e6e1"
+}

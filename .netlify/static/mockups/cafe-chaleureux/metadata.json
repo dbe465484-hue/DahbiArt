@@ -1,0 +1,10 @@
+{
+  "name": "Café chaleureux",
+  "placement": {
+    "x": 0.10800000000000001,
+    "y": 0.20800000000000002,
+    "width": 0.184,
+    "height": 0.264
+  },
+  "wallTone": "#ffffff"
+}

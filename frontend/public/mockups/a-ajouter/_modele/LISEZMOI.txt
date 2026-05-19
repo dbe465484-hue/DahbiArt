@@ -1,0 +1,17 @@
+Modèle — ne pas importer ce dossier.
+
+
+
+1. Dupliquez ce dossier (ex. mon-salon) à côté, pas dans _modele.
+
+2. Renommez-le (identifiant sans espaces).
+
+3. Ajoutez votre photo : background.jpg ou background.png
+
+4. Ajustez metadata.json si besoin (placement sur le mur).
+   Mode par défaut : "hang" (comme salon-beige — sans cadre blanc).
+
+5. Lancez : npm run mockups:import
+
+6. Si vous modifiez une image déjà en place : npm run mockups:sync-paths
+

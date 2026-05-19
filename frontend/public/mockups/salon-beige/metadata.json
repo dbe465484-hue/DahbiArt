@@ -1,0 +1,13 @@
+{
+  "name": "Salon beige",
+  "mode": "hang",
+  "placement": {
+    "x": 0.38,
+    "y": 0.3,
+    "width": 0.24,
+    "height": 0.34,
+    "rotation": 0
+  },
+  "feather": 0.012,
+  "wallTone": "#e5ddd3"
+}

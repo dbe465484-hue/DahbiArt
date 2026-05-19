@@ -1,0 +1,31 @@
+{
+  "posts": [
+    {
+      "slug": "plein-air-essaouira",
+      "title": "Une semaine de plein air à Essaouira",
+      "excerpt": "Carnet de voyage et nouvelles toiles face à l'Atlantique.",
+      "content": "Une semaine passée face à l'Atlantique, carnet de croquis à la main et toiles qui prennent vie au rythme des marées. Essaouira offre une lumière changeante que j'aime capturer sur le motif.",
+      "image": "https://images.pexels.com/photos/2670898/pexels-photo-2670898.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      "publishedAt": "2025-03-12",
+      "published": true
+    },
+    {
+      "slug": "atelier-kasbah",
+      "title": "Dans l'atelier de la Kasbah",
+      "excerpt": "Préparer une exposition : choix des cadres et lumière.",
+      "content": "Les derniers préparatifs avant le vernissage : sélection des œuvres, tests de cadres et réglage de la lumière pour mettre en valeur chaque tableau.",
+      "image": "https://images.pexels.com/photos/2885324/pexels-photo-2885324.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      "publishedAt": "2025-01-05",
+      "published": true
+    },
+    {
+      "slug": "couleurs-du-sud",
+      "title": "Les ocres du sud marocain",
+      "excerpt": "Comment la lumière de Marrakech influence ma palette.",
+      "content": "Les ocres, les roses et les bleus profonds du sud marocain nourrissent ma palette. Marrakech reste une source d'inspiration inépuisable pour mes paysages intérieurs.",
+      "image": "https://images.pexels.com/photos/3237801/pexels-photo-3237801.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      "publishedAt": "2024-11-20",
+      "published": true
+    }
+  ]
+}

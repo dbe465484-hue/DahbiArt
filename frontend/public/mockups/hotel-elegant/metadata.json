@@ -1,0 +1,13 @@
+{
+  "name": "Hôtel élégant",
+  "placement": {
+    "x": 0.4,
+    "y": 0.2,
+    "width": 0.2,
+    "height": 0.34,
+    "rotation": 0
+  },
+  "wallTone": "#ffffff",
+  "mode": "hang",
+  "feather": 0.012
+}

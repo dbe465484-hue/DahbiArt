@@ -1,0 +1,13 @@
+{
+  "name": "Salon blanc",
+  "placement": {
+    "x": 0.4,
+    "y": 0.22,
+    "width": 0.2,
+    "height": 0.32,
+    "rotation": 0
+  },
+  "wallTone": "#ffffff",
+  "mode": "hang",
+  "feather": 0.012
+}

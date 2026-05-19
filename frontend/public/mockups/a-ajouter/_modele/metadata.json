@@ -1,0 +1,20 @@
+{
+  "name": "Mon intérieur",
+  "category": "maison",
+  "styles": ["minimaliste"],
+  "placement": {
+    "x": 0.35,
+    "y": 0.14,
+    "width": 0.22,
+    "height": 0.34
+  },
+  "feather": 0.028,
+  "wallTone": "#ffffff",
+  "blend": {
+    "brightness": 0.99,
+    "contrast": 1.01,
+    "saturation": 0.98
+  },
+  "recommendedOrientations": ["portrait", "landscape"],
+  "tags": ["personnalisé"]
+}

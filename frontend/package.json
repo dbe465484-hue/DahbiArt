@@ -1,0 +1,42 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:netlify": "node scripts/build-static.mjs",
+    "build:netlify:static": "node scripts/build-static.mjs",
+    "start": "next start",
+    "lint": "eslint",
+    "mockups:generate": "node scripts/generate-mockup-backgrounds.mjs",
+    "mockups:sync": "node scripts/generate-mockup-backgrounds.mjs",
+    "mockups:import": "node scripts/import-mockups.mjs",
+    "mockups:sync-paths": "node scripts/sync-mockup-paths.mjs",
+    "mockups:sync-catalog": "node scripts/sync-mockup-catalog.mjs",
+    "mockups:apply-placements": "node scripts/apply-mockup-placements.mjs && node scripts/sync-mockup-catalog.mjs",
+    "mockups:calibrate": "node scripts/calibrate-mockup-placements.mjs && node scripts/sync-mockup-catalog.mjs",
+    "tableaux:build-catalog": "node scripts/build-paintings-catalog.mjs",
+    "tableaux:sync": "node scripts/build-paintings-catalog.mjs && node scripts/sync-tableaux.mjs",
+    "tableaux:import": "npm run tableaux:sync && cd ../backend && npm run seed:build",
+    "video:sync": "node scripts/sync-header-video.mjs"
+  },
+  "dependencies": {
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.11",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

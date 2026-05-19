@@ -1,0 +1,21 @@
+# Netlify — Next.js complet (admin + auth côté client)
+# Prérequis : API NestJS + MySQL hébergée ailleurs (Render, Railway, VPS…)
+#
+# Variables Netlify (Site settings → Environment variables) :
+#   NEXT_PUBLIC_API_URL = https://votre-api.example.com
+#
+# Sur le backend (.env) :
+#   FRONTEND_URL = https://votre-site.netlify.app
+#
+# Déploiement catalogue seul (sans admin) : voir netlify.static.toml
+
+[build]
+  base = "frontend"
+  command = "npm ci && npm run build"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"

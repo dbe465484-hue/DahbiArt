@@ -1,0 +1,389 @@
+{
+  "version": 3,
+  "mockups": [
+    {
+      "id": "salon-blanc",
+      "name": "Salon blanc",
+      "category": "maison",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/salon-blanc/background.png",
+      "placement": {
+        "x": 0.4,
+        "y": 0.22,
+        "width": 0.2,
+        "height": 0.32,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#ffffff",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "maison"
+      ]
+    },
+    {
+      "id": "salon-beige",
+      "name": "Salon beige",
+      "category": "maison",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/salon-beige/background.png",
+      "placement": {
+        "x": 0.38,
+        "y": 0.3,
+        "width": 0.24,
+        "height": 0.34,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#e5ddd3",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "maison"
+      ]
+    },
+    {
+      "id": "chambre-douce",
+      "name": "Chambre douce",
+      "category": "maison",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/chambre-douce/background.png",
+      "placement": {
+        "x": 0.38,
+        "y": 0.3,
+        "width": 0.36,
+        "height": 0.22,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#ffffff",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "maison"
+      ]
+    },
+    {
+      "id": "couloir-minimal",
+      "name": "Couloir minimal",
+      "category": "maison",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/couloir-minimal/background.png",
+      "placement": {
+        "x": 0.37,
+        "y": 0.32,
+        "width": 0.26,
+        "height": 0.21,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#ffffff",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "maison"
+      ]
+    },
+    {
+      "id": "salle-manger",
+      "name": "Salle à manger",
+      "category": "maison",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/salle-manger/background.png",
+      "placement": {
+        "x": 0.39,
+        "y": 0.2,
+        "width": 0.22,
+        "height": 0.3,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#ffffff",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "maison"
+      ]
+    },
+    {
+      "id": "galerie-blanche",
+      "name": "Galerie blanche",
+      "category": "commercial",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/galerie-blanche/background.png",
+      "placement": {
+        "x": 0.41,
+        "y": 0.27,
+        "width": 0.2,
+        "height": 0.21,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#ffffff",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "commercial"
+      ]
+    },
+    {
+      "id": "loft-industriel",
+      "name": "Loft industriel",
+      "category": "commercial",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/loft-industriel/background.png",
+      "placement": {
+        "x": 0.36,
+        "y": 0.22,
+        "width": 0.26,
+        "height": 0.38,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#ffffff",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "commercial"
+      ]
+    },
+    {
+      "id": "cafe-chaleureux",
+      "name": "Café chaleureux",
+      "category": "commercial",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/cafe-chaleureux/background.png",
+      "placement": {
+        "x": 0.39,
+        "y": 0.22,
+        "width": 0.22,
+        "height": 0.38,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#e8e0d5",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "commercial"
+      ]
+    },
+    {
+      "id": "bureau-moderne",
+      "name": "Bureau moderne",
+      "category": "commercial",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/bureau-moderne/background.png",
+      "placement": {
+        "x": 0.39,
+        "y": 0.14,
+        "width": 0.22,
+        "height": 0.36,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#e8e6e1",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "commercial"
+      ]
+    },
+    {
+      "id": "hotel-elegant",
+      "name": "Hôtel élégant",
+      "category": "commercial",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/hotel-elegant/background.png",
+      "placement": {
+        "x": 0.4,
+        "y": 0.2,
+        "width": 0.2,
+        "height": 0.34,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#ffffff",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "commercial"
+      ]
+    },
+    {
+      "id": "mur-sombre",
+      "name": "Mur sombre premium",
+      "category": "style",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/mur-sombre/background.png",
+      "placement": {
+        "x": 0.38,
+        "y": 0.22,
+        "width": 0.24,
+        "height": 0.38,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#ffffff",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "style"
+      ]
+    },
+    {
+      "id": "scandinave",
+      "name": "Scandinave",
+      "category": "style",
+      "styles": [
+        "minimaliste"
+      ],
+      "mode": "hang",
+      "background": "/mockups/scandinave/background.png",
+      "placement": {
+        "x": 0.4,
+        "y": 0.2,
+        "width": 0.2,
+        "height": 0.32,
+        "rotation": 0
+      },
+      "feather": 0.012,
+      "wallTone": "#ffffff",
+      "blend": {
+        "brightness": 0.99,
+        "contrast": 1.01,
+        "saturation": 0.98
+      },
+      "recommendedOrientations": [
+        "portrait",
+        "landscape"
+      ],
+      "tags": [
+        "généré",
+        "style"
+      ]
+    }
+  ]
+}

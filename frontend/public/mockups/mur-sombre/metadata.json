@@ -1,0 +1,13 @@
+{
+  "name": "Mur sombre premium",
+  "placement": {
+    "x": 0.38,
+    "y": 0.22,
+    "width": 0.24,
+    "height": 0.38,
+    "rotation": 0
+  },
+  "wallTone": "#ffffff",
+  "mode": "hang",
+  "feather": 0.012
+}
