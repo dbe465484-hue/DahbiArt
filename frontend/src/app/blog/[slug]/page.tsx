@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import { BlogPostPageContent } from "@/components/blog/BlogPostPageContent";
+import fallback from "@/data/blog-fallback.json";
 import { getBlogPost, getBlogPosts } from "@/lib/blog";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  const posts = await getBlogPosts();
-  return posts.map((p) => ({ slug: p.slug }));
+  return fallback.posts.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {

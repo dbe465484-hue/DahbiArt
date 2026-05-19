@@ -1,7 +1,7 @@
 import fallback from "@/data/blog-fallback.json";
 import { formatFrenchDate } from "./format-date";
 
-import { API_URL } from "./api-url";
+import { fetchApi } from "./fetch-api";
 
 export type BlogPost = {
   id?: string;
@@ -26,9 +26,7 @@ function staticPosts(): BlogPostCard[] {
 
 export async function getBlogPosts(): Promise<BlogPostCard[]> {
   try {
-    const res = await fetch(`${API_URL}/blog-posts`, {
-      next: { revalidate: 60 },
-    });
+    const res = await fetchApi("/blog-posts", { next: { revalidate: 60 } });
     if (!res.ok) return staticPosts();
     const data = (await res.json()) as BlogPost[];
     return data.map((p) => toCard(p));
@@ -39,7 +37,7 @@ export async function getBlogPosts(): Promise<BlogPostCard[]> {
 
 export async function getBlogPost(slug: string): Promise<BlogPostCard | null> {
   try {
-    const res = await fetch(`${API_URL}/blog-posts/${encodeURIComponent(slug)}`, {
+    const res = await fetchApi(`/blog-posts/${encodeURIComponent(slug)}`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) {

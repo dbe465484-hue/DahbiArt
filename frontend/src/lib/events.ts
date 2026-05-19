@@ -1,7 +1,7 @@
 import fallback from "@/data/events-fallback.json";
 import { formatFrenchDate } from "./format-date";
 
-import { API_URL } from "./api-url";
+import { fetchApi } from "./fetch-api";
 
 export type CalendarEvent = {
   id?: string;
@@ -24,7 +24,7 @@ function staticEvents(): CalendarEventCard[] {
 
 export async function getEvents(): Promise<CalendarEventCard[]> {
   try {
-    const res = await fetch(`${API_URL}/events`, { next: { revalidate: 60 } });
+    const res = await fetchApi("/events", { next: { revalidate: 60 } });
     if (!res.ok) return staticEvents();
     const data = (await res.json()) as CalendarEvent[];
     return data.map((e) => toCard(e));

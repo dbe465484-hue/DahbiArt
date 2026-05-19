@@ -1,7 +1,7 @@
 import catalog from "@/data/paintings-catalog.json";
 import type { Collection, Painting } from "./types";
 
-import { API_URL } from "./api-url";
+import { fetchApi } from "./fetch-api";
 
 /** Images locales (dossier `tableaux/` → `npm run tableaux:sync`) */
 export const paintingImage = (slug: string) => `/paintings/${slug}.webp`;
@@ -109,7 +109,7 @@ export function getStaticPaintingSlugs(): string[] {
 
 export async function getPaintings(): Promise<Painting[]> {
   try {
-    const res = await fetch(`${API_URL}/paintings`, { cache: "no-store" });
+    const res = await fetchApi("/paintings", { cache: "no-store" });
     if (!res.ok) return getStaticPaintings();
     const data = (await res.json()) as Painting[];
     return data.map((p) => ({
@@ -124,7 +124,7 @@ export async function getPaintings(): Promise<Painting[]> {
 
 export async function getPainting(slug: string) {
   try {
-    const res = await fetch(`${API_URL}/paintings/${slug}`, { cache: "no-store" });
+    const res = await fetchApi(`/paintings/${slug}`, { cache: "no-store" });
     if (!res.ok) return getStaticPaintings().find((p) => p.slug === slug);
     const p = (await res.json()) as Painting;
     return {
