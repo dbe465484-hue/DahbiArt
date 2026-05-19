@@ -1,11 +1,11 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 
 @Injectable()
-export class EventsSeedService implements OnModuleInit {
+export class EventsSeedService implements OnApplicationBootstrap {
   private readonly logger = new Logger(EventsSeedService.name);
 
   constructor(private readonly events: EventsService) {}
@@ -33,7 +33,9 @@ export class EventsSeedService implements OnModuleInit {
     }
   }
 
-  onModuleInit() {
-    void this.seedIfEmpty();
+  onApplicationBootstrap() {
+    void this.seedIfEmpty().catch((err) => {
+      this.logger.warn(err instanceof Error ? err.message : String(err));
+    });
   }
 }

@@ -5,7 +5,10 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
-  const origins = (process.env.FRONTEND_URL ?? 'http://localhost:3000')
+  const origins = (
+    process.env.FRONTEND_URL ??
+    'http://localhost:3000,https://dahbi-art.vercel.app'
+  )
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);

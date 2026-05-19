@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PaintingsService } from './paintings.service';
@@ -16,7 +16,7 @@ export type CatalogSyncResult = {
 };
 
 @Injectable()
-export class PaintingsSeedService implements OnModuleInit {
+export class PaintingsSeedService implements OnApplicationBootstrap {
   private readonly logger = new Logger(PaintingsSeedService.name);
 
   constructor(private readonly paintings: PaintingsService) {}
@@ -89,7 +89,7 @@ export class PaintingsSeedService implements OnModuleInit {
     };
   }
 
-  async onModuleInit() {
+  async onApplicationBootstrap() {
     try {
       const result = await this.syncCatalog({ removeOrphans: false });
       if (result.created > 0 || result.updated > 0 || result.removed > 0) {

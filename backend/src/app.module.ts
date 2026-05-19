@@ -14,6 +14,7 @@ import { StudioModule } from './studio/studio.module';
 import { CommandeModule } from './commande/commande.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { OrdersModule } from './orders/orders.module';
+import { DatabaseBootstrapService } from './database/database-bootstrap.service';
 
 @Module({
   imports: [
@@ -84,6 +85,6 @@ import { OrdersModule } from './orders/orders.module';
     NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, DatabaseBootstrapService],
 })
 export class AppModule {}

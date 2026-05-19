@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import { BlogPostsService } from './blog-posts.service';
@@ -7,7 +7,7 @@ import { CreateBlogPostDto } from './dto/create-blog-post.dto';
 type SeedItem = CreateBlogPostDto & { slug: string };
 
 @Injectable()
-export class BlogSeedService implements OnModuleInit {
+export class BlogSeedService implements OnApplicationBootstrap {
   private readonly logger = new Logger(BlogSeedService.name);
 
   constructor(private readonly blog: BlogPostsService) {}
@@ -34,7 +34,9 @@ export class BlogSeedService implements OnModuleInit {
     }
   }
 
-  onModuleInit() {
-    void this.seedIfEmpty();
+  onApplicationBootstrap() {
+    void this.seedIfEmpty().catch((err) => {
+      this.logger.warn(err instanceof Error ? err.message : String(err));
+    });
   }
 }
