@@ -4,12 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-const adminNav = [
+type AdminNavItem = {
+  href: string;
+  label: string;
+  exact?: boolean;
+};
+
+const adminNav: AdminNavItem[] = [
   { href: "/admin", label: "Tableau de bord", exact: true },
   { href: "/admin/paintings", label: "Peintures" },
   { href: "/admin/blog", label: "Blog" },
   { href: "/admin/events", label: "Événements" },
-] as const;
+];
 
 type Props = {
   /** Sur le site public : masquer la nav admin détaillée, garder les accès site / admin */

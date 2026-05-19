@@ -3,13 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const links = [
+type NavItem = {
+  href: string;
+  label: string;
+  exact?: boolean;
+};
+
+const links: NavItem[] = [
   { href: "/admin", label: "Tableau de bord", exact: true },
   { href: "/admin/paintings", label: "Peintures" },
   { href: "/admin/blog", label: "Blog" },
   { href: "/admin/events", label: "Événements" },
   { href: "/admin/users", label: "Utilisateurs" },
-] as const;
+];
 
 export function AdminSubNav() {
   const pathname = usePathname();
