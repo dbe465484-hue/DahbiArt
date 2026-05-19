@@ -3,11 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const links = [
+type StudioNavItem = {
+  href: string;
+  label: string;
+  exact?: boolean;
+};
+
+const links: StudioNavItem[] = [
   { href: "/studio", label: "Accueil", exact: true },
   { href: "/studio/blog", label: "Blog" },
   { href: "/studio/events", label: "Événements" },
-] as const;
+];
 
 export function StudioSubNav() {
   const pathname = usePathname();
