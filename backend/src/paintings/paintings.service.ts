@@ -119,10 +119,17 @@ export class PaintingsService {
     return this.repo.findOne({ where: { slug } });
   }
 
-  async upsertFromSeed(dto: CreatePaintingDto & { slug: string }) {
+  async upsertFromSeed(
+    dto: CreatePaintingDto & { slug: string },
+    options?: { updateExisting?: boolean },
+  ) {
     const existing = await this.findEntityBySlug(dto.slug);
     if (!existing) {
       return this.create(dto);
+    }
+
+    if (!options?.updateExisting) {
+      return this.serialize(existing);
     }
 
     Object.assign(existing, {

@@ -36,19 +36,29 @@ export class PaintingsSeedService implements OnApplicationBootstrap {
     return paintings;
   }
 
-  async syncCatalog(options?: { removeOrphans?: boolean }): Promise<CatalogSyncResult> {
+  async syncCatalog(options?: {
+    removeOrphans?: boolean;
+    /** true = bouton admin « Importer le catalogue » ; false = boot API (ne pas écraser les modifs) */
+    updateExisting?: boolean;
+  }): Promise<CatalogSyncResult> {
     const paintings = this.loadSeedItems();
     let created = 0;
     let updated = 0;
     let already = 0;
     const errors: string[] = [];
 
+    const updateExisting = options?.updateExisting === true;
+
     for (const item of paintings) {
       const exists = await this.paintings.existsBySlug(item.slug);
       try {
-        await this.paintings.upsertFromSeed({ ...item, slug: item.slug });
-        if (exists) updated++;
-        else created++;
+        await this.paintings.upsertFromSeed(
+          { ...item, slug: item.slug },
+          { updateExisting },
+        );
+        if (!exists) created++;
+        else if (updateExisting) updated++;
+        else already++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         errors.push(`${item.slug}: ${msg}`);
@@ -91,7 +101,10 @@ export class PaintingsSeedService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     try {
-      const result = await this.syncCatalog({ removeOrphans: false });
+      const result = await this.syncCatalog({
+        removeOrphans: false,
+        updateExisting: false,
+      });
       if (result.created > 0 || result.updated > 0 || result.removed > 0) {
         this.logger.log(
           `Catalogue : ${result.created} créé(s), ${result.updated} mis à jour, ${result.removed} retiré(s) (${result.total} œuvres)`,

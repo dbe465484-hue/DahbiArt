@@ -29,6 +29,8 @@ export default function AdminEditPaintingPage() {
     if (!token || !id) throw new Error("Non authentifié");
     await api.admin.paintings.update(token, id, data);
     router.push("/admin/paintings");
+    router.refresh();
+    alert("Modifications enregistrées.");
   }
 
   if (error) {

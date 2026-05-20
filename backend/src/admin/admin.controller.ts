@@ -191,7 +191,7 @@ export class AdminController {
   /** Importe les tableaux manquants depuis le catalogue (36 œuvres) */
   @Post('paintings/sync-catalog')
   syncCatalog() {
-    return this.catalogSeed.syncCatalog();
+    return this.catalogSeed.syncCatalog({ updateExisting: true });
   }
 
   @Patch('paintings/:id')

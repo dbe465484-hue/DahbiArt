@@ -116,9 +116,15 @@ export function ImageUploadField({
       )}
 
       {error && (
-        <p className="mt-2 text-sm text-red-800" role="alert">
-          {error}
-        </p>
+        <div className="mt-2 space-y-1 text-sm text-red-800" role="alert">
+          <p>{error}</p>
+          {error.includes("Vercel Blob") && (
+            <p className="text-xs text-red-700">
+              Vercel → projet <strong>dahbi-art-api</strong> → Storage → Blob → lier le store →
+              redeploy. L’enregistrement du tableau n’est possible qu’après un upload réussi.
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

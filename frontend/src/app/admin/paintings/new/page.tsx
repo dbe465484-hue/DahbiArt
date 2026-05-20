@@ -15,6 +15,7 @@ export default function AdminNewPaintingPage() {
     await api.admin.paintings.create(token, data);
     router.push("/admin/paintings");
     router.refresh();
+    alert("Tableau enregistré dans la base de données.");
   }
 
   return (

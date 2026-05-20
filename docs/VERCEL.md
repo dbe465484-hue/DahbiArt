@@ -28,8 +28,9 @@ Si `frontend` pointe vers `/` au lieu de `frontend/` : faites **Edit** sur la st
 
 | Variable | Service | Valeur |
 |----------|---------|--------|
-| `DATABASE_URL` | backend | (Neon / PlanetScale via **Storage**) |
-| `DB_SYNCHRONIZE` | backend | `true` puis `false` |
+| `DATABASE_URL` | backend | (Neon via **Storage**, projet **dahbi-art-api**) |
+| `BLOB_READ_WRITE_TOKEN` | **dahbi-art-api uniquement** | créé automatiquement en liant **Vercel Blob** au projet API |
+| `DB_SYNCHRONIZE` | backend | `false` en prod (ne pas forcer `true` : risque d’erreur si données incomplètes) |
 | `JWT_SECRET` | backend | chaîne aléatoire longue |
 | `ADMIN_EMAIL` | backend | email admin |
 | `ADMIN_PASSWORD` | backend | mot de passe |
@@ -44,7 +45,23 @@ Si `frontend` pointe vers `/` au lieu de `frontend/` : faites **Edit** sur la st
 
 ## 3. Base de données
 
-**Storage** → Marketplace → **Neon** (Postgres) ou **PlanetScale** (MySQL) → lier au projet.
+**Storage** → Marketplace → **Neon** (Postgres) → lier au projet **dahbi-art-api** (pas seulement le site).
+
+Les données **locales MySQL ne sont pas migrées** automatiquement : Neon contient le catalogue seed (~36 tableaux) + ce que vous créez en prod.
+
+---
+
+## 3b. Images (Vercel Blob) — obligatoire pour upload admin
+
+1. Projet Vercel **dahbi-art-api** (pas `dahbi-art` seul).
+2. **Storage** → **Create Database** → **Blob**.
+3. Lier le store au projet **dahbi-art-api** → Vercel ajoute `BLOB_READ_WRITE_TOKEN`.
+4. **Redeploy** l’API après toute modification de cette variable.
+
+Sans Blob : l’upload échoue et **impossible de créer** un tableau (image obligatoire).  
+La modification **sans** changer l’image (titre, prix, etc.) peut quand même être enregistrée en base.
+
+Au démarrage de l’API, le catalogue seed **n’écrase plus** les tableaux déjà en base (seuls les slugs manquants sont ajoutés). Le bouton admin **Importer le catalogue** force la mise à jour depuis le JSON.
 
 ---
 

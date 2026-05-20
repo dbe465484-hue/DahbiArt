@@ -26,7 +26,7 @@ export class UploadsService {
   private readonly publicRoot: string;
   private readonly useBlob: boolean;
 
-  constructor(config: ConfigService) {
+  constructor(private readonly config: ConfigService) {
     const configured = config.get<string>('UPLOAD_PUBLIC_DIR');
     if (configured) {
       this.publicRoot = path.resolve(configured);
@@ -101,16 +101,22 @@ export class UploadsService {
     }
 
     if (this.useBlob) {
+      const token =
+        this.config.get<string>('BLOB_READ_WRITE_TOKEN') ||
+        process.env.BLOB_READ_WRITE_TOKEN;
       try {
         const blob = await put(`${sub}/${filename}`, webpBuffer, {
           access: 'public',
           contentType: 'image/webp',
           addRandomSuffix: false,
+          allowOverwrite: true,
+          token,
         });
         return { url: blob.url, filename };
-      } catch {
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err);
         throw new InternalServerErrorException(
-          'Échec de l’envoi sur Vercel Blob. Vérifiez BLOB_READ_WRITE_TOKEN.',
+          `Échec de l’envoi sur Vercel Blob : ${detail}. Vérifiez le store Blob sur le projet Vercel dahbi-art-api (variable BLOB_READ_WRITE_TOKEN).`,
         );
       }
     }
