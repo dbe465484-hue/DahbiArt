@@ -13,7 +13,9 @@ export default function AdminNewEventPage() {
     const token = getToken();
     if (!token) throw new Error("Non authentifié");
     await api.admin.events.create(token, data);
-    router.push("/admin/events");
+    router.push("/calendar");
+    router.refresh();
+    alert("Événement enregistré. Visible sur la page Calendrier (/calendar).");
   }
 
   return (

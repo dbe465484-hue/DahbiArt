@@ -12,8 +12,15 @@ export default function AdminNewBlogPostPage() {
   async function handleSubmit(data: BlogPostInput) {
     const token = getToken();
     if (!token) throw new Error("Non authentifié");
-    await api.admin.blogPosts.create(token, data);
-    router.push("/admin/blog");
+    const created = await api.admin.blogPosts.create(token, data);
+    if (created.published !== false) {
+      router.push(`/blog/${created.slug}`);
+      alert(`Article publié. Visible sur /blog/${created.slug}`);
+    } else {
+      router.push("/admin/blog");
+      alert("Brouillon enregistré — cochez « Publié » pour l’afficher sur le blog.");
+    }
+    router.refresh();
   }
 
   return (

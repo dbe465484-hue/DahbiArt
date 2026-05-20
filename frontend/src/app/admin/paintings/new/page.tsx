@@ -12,10 +12,12 @@ export default function AdminNewPaintingPage() {
   async function handleSubmit(data: PaintingInput) {
     const token = getToken();
     if (!token) throw new Error("Non authentifié");
-    await api.admin.paintings.create(token, data);
-    router.push("/admin/paintings");
+    const created = await api.admin.paintings.create(token, data);
+    router.push(`/paintings/${created.slug}`);
     router.refresh();
-    alert("Tableau enregistré dans la base de données.");
+    alert(
+      `Tableau enregistré. Visible sur la boutique : /paintings/${created.slug}`,
+    );
   }
 
   return (
