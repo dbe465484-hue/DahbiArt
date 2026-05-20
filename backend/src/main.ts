@@ -14,7 +14,21 @@ async function bootstrap() {
     .filter(Boolean);
 
   app.enableCors({
-    origin: origins.length === 1 ? origins[0] : origins,
+    origin: (origin, callback) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      if (origins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      if (/^https:\/\/[\w-]+\.vercel\.app$/.test(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
     credentials: true,
   });
 

@@ -1,4 +1,4 @@
-import { API_URL } from "./api-url";
+import { API_URL, uploadApiBase } from "./api-url";
 
 export type UserRole = "customer" | "admin" | "artiste" | "commande";
 
@@ -331,7 +331,8 @@ async function uploadRequest(
 
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, {
+    const uploadBase = uploadApiBase().replace(/\/$/, "");
+    res = await fetch(`${uploadBase}${path}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: form,
@@ -350,7 +351,11 @@ async function uploadRequest(
       if (Array.isArray(body.message)) message = body.message[0] ?? message;
       else if (body.message) message = body.message;
     } catch {
-      /* ignore */
+      if (res.status === 413) {
+        message = "Image trop volumineuse pour l’hébergement (max ~4 Mo). Réduisez le fichier ou réessayez.";
+      } else {
+        message = `Échec de l’upload (HTTP ${res.status})`;
+      }
     }
     throw new ApiError(message, res.status);
   }

@@ -3,6 +3,8 @@ import { BlogPostPageContent } from "@/components/blog/BlogPostPageContent";
 import fallback from "@/data/blog-fallback.json";
 import { getBlogPost, getBlogPosts } from "@/lib/blog";
 
+export const dynamic = "force-dynamic";
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {

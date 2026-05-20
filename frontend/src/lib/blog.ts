@@ -26,7 +26,7 @@ function staticPosts(): BlogPostCard[] {
 
 export async function getBlogPosts(): Promise<BlogPostCard[]> {
   try {
-    const res = await fetchApi("/blog-posts", { next: { revalidate: 60 } });
+    const res = await fetchApi("/blog-posts", { cache: "no-store" });
     if (!res.ok) return staticPosts();
     const data = (await res.json()) as BlogPost[];
     return data.map((p) => toCard(p));
@@ -38,7 +38,7 @@ export async function getBlogPosts(): Promise<BlogPostCard[]> {
 export async function getBlogPost(slug: string): Promise<BlogPostCard | null> {
   try {
     const res = await fetchApi(`/blog-posts/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
     if (!res.ok) {
       const local = staticPosts().find((p) => p.slug === slug);

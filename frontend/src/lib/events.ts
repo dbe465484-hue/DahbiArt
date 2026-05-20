@@ -24,7 +24,7 @@ function staticEvents(): CalendarEventCard[] {
 
 export async function getEvents(): Promise<CalendarEventCard[]> {
   try {
-    const res = await fetchApi("/events", { next: { revalidate: 60 } });
+    const res = await fetchApi("/events", { cache: "no-store" });
     if (!res.ok) return staticEvents();
     const data = (await res.json()) as CalendarEvent[];
     return data.map((e) => toCard(e));

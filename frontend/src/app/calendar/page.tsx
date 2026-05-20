@@ -1,6 +1,8 @@
 import { CalendarPageContent } from "@/components/calendar/CalendarPageContent";
 import { getEvents } from "@/lib/events";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Calendrier",
   description:

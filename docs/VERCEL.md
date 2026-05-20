@@ -37,7 +37,13 @@ Si `frontend` pointe vers `/` au lieu de `frontend/` : faites **Edit** sur la st
 | `CHECKOUT_DEV_MODE` | backend | `true` (sans Stripe) |
 | `SEED_PAINTINGS` | backend | `true` (optionnel, 1ère fois) |
 
-**Ne pas** définir `NEXT_PUBLIC_API_URL` : Vercel injecte `NEXT_PUBLIC_BACKEND_URL=/api` automatiquement.
+**Ne pas** définir `NEXT_PUBLIC_API_URL` à `localhost` sur Vercel (sinon la boutique affiche le catalogue statique).
+
+| Variable | Projet | Rôle |
+|----------|--------|------|
+| `BACKEND_INTERNAL_URL` | **dahbi-art** | URL absolue de l’API pour les pages serveur (`https://dahbi-art-api.vercel.app`) |
+| `NEXT_PUBLIC_BACKEND_URL` | dahbi-art | `/api` (navigateur, rewrite) |
+| `NEXT_PUBLIC_API_ORIGIN` | dahbi-art (optionnel) | Upload direct vers l’API si le domaine change |
 
 `FRONTEND_URL` est aussi injecté automatiquement pour le service `frontend`.
 

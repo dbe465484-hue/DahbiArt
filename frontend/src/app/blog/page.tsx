@@ -1,6 +1,8 @@
 import { BlogPageContent } from "@/components/blog/BlogPageContent";
 import { getBlogPosts } from "@/lib/blog";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Blog",
   description:
