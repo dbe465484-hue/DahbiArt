@@ -100,7 +100,7 @@ export function ImageUploadField({
           <input
             ref={inputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            accept="image/*"
             className="sr-only"
             required={required && !value}
             onChange={(e) => {
@@ -127,7 +127,7 @@ export function ImageUploadField({
       )}
 
       <p className="mt-2 text-xs text-stone-500">
-        JPEG ou PNG — max {MAX_UPLOAD_LABEL} par fichier (les petits PNG sont envoyés tels quels).
+        Tous formats image (JPEG, PNG, WebP…) — envoyés tels quels, max {MAX_UPLOAD_LABEL} (limite Vercel).
       </p>
 
       {error && (

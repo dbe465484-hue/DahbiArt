@@ -10,7 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { slugify } from '../common/utils/slugify';
 
-/** Aligné sur la limite corps de requête Vercel (~4,5 Mo) */
+/** Limite corps de requête Vercel (~4,5 Mo) — pas plus sans autre hébergeur. */
 const MAX_BYTES = 4.5 * 1024 * 1024;
 const ALLOWED = new Set([
   'image/jpeg',
@@ -18,6 +18,9 @@ const ALLOWED = new Set([
   'image/webp',
   'image/gif',
   'image/avif',
+  'image/bmp',
+  'image/tiff',
+  'image/svg+xml',
 ]);
 
 export type UploadKind = 'painting' | 'blog';
@@ -68,7 +71,7 @@ export class UploadsService {
     }
     if (!ALLOWED.has(file.mimetype)) {
       throw new BadRequestException(
-        'Format non supporté (JPEG, PNG, WebP, GIF, AVIF)',
+        'Format non supporté (JPEG, PNG, WebP, GIF, AVIF, BMP, TIFF)',
       );
     }
 
