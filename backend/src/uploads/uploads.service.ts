@@ -88,16 +88,22 @@ export class UploadsService {
     let webpBuffer: Buffer;
     try {
       const { default: sharp } = await import('sharp');
-      webpBuffer = await sharp(file.buffer)
-        .rotate()
+      let pipeline = sharp(file.buffer, { failOn: 'none' }).rotate();
+      if (file.mimetype === 'image/png') {
+        pipeline = pipeline.flatten({ background: { r: 255, g: 255, b: 255 } });
+      }
+      webpBuffer = await pipeline
         .resize(maxEdge, maxHeight, {
           fit: 'inside',
           withoutEnlargement: true,
         })
         .webp({ quality: 86 })
         .toBuffer();
-    } catch {
-      throw new InternalServerErrorException('Échec du traitement de l’image');
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      throw new InternalServerErrorException(
+        `Échec du traitement de l’image : ${detail}`,
+      );
     }
 
     if (this.useBlob) {

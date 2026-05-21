@@ -118,7 +118,7 @@ export function ImageUploadField({
       )}
 
       <p className="mt-2 text-xs text-stone-500">
-        JPEG, PNG ou WebP — grosses photos et iPhone (HEIC) sont compressés automatiquement.
+        JPEG ou PNG — les PNG sont convertis en JPEG automatiquement (fond blanc si transparence).
       </p>
 
       {error && (
