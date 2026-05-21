@@ -343,17 +343,25 @@ async function uploadRequest(
     });
   } catch (err) {
     const onLocal = uploadBase.includes("localhost") || uploadBase.includes("127.0.0.1");
+    const fileLabel =
+      file.size >= 1024 * 1024
+        ? `${(file.size / (1024 * 1024)).toFixed(2)} Mo`
+        : `${Math.round(file.size / 1024)} Ko`;
     let message: string;
     if (err instanceof Error && err.name === "AbortError") {
-      message =
-        "Envoi trop long (timeout). L’image sera compressée automatiquement au prochain essai — réessayez.";
+      message = `Délai dépassé (fichier ${fileLabel}). Réessayez ou utilisez une image plus légère.`;
     } else if (onLocal) {
-      message = `Impossible de joindre l’API (${uploadBase}). Lancez le backend : cd backend && npm run start:dev`;
-    } else if (file.size > 4.5 * 1024 * 1024) {
-      message = `Connexion interrompue (${(file.size / (1024 * 1024)).toFixed(1)} Mo). Réessayez : les fichiers > 4,5 Mo sont compressés automatiquement avant envoi.`;
+      message =
+        `Impossible de joindre l’API (${uploadBase}).\n` +
+        `Votre fichier : ${fileLabel}.\n` +
+        `Lancez le backend : cd backend && npm run start:dev\n` +
+        `Ou testez sur https://dahbi-art.vercel.app/admin`;
     } else {
       message =
-        "Connexion interrompue (réseau ou API). En local : lancez `cd backend && npm run start:dev`. Sinon réessayez.";
+        `Connexion interrompue pendant l’envoi.\n` +
+        `• Fichier envoyé : ${fileLabel}\n` +
+        `• Maximum : 4,5 Mo après compression\n` +
+        `Réessayez ; si le problème continue, vérifiez votre connexion.`;
     }
     throw new ApiError(message, 0);
   } finally {
@@ -368,7 +376,11 @@ async function uploadRequest(
       else if (body.message) message = body.message;
     } catch {
       if (res.status === 413) {
-        message = "Image trop volumineuse pour l’hébergement (max 4,5 Mo). Réduisez le fichier ou réessayez.";
+        const sent =
+          file.size >= 1024 * 1024
+            ? `${(file.size / (1024 * 1024)).toFixed(2)} Mo`
+            : `${Math.round(file.size / 1024)} Ko`;
+        message = `Fichier trop lourd pour l’hébergeur (${sent} envoyé). Maximum : 4,5 Mo après compression JPEG.`;
       } else {
         message = `Échec de l’upload (HTTP ${res.status})`;
       }

@@ -6,8 +6,9 @@ const BLOCKED = new Set(["image/heic", "image/heif"]);
 const MAX_EDGE_START = 3200;
 const MAX_CANVAS_DIM = 8192;
 
-function formatMo(bytes: number) {
-  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+function formatSize(bytes: number) {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} Mo`;
+  return `${Math.round(bytes / 1024)} Ko`;
 }
 
 export function mimeFromFile(file: File): string {
@@ -18,9 +19,12 @@ export function mimeFromFile(file: File): string {
   if (n.endsWith(".gif")) return "image/gif";
   if (n.endsWith(".avif")) return "image/avif";
   if (/\.(jpe?g)$/.test(n)) return "image/jpeg";
-  if (n.endsWith(".bmp")) return "image/bmp";
-  if (n.endsWith(".tif") || n.endsWith(".tiff")) return "image/tiff";
   return "";
+}
+
+function isJpeg(file: File) {
+  const t = mimeFromFile(file);
+  return t === "image/jpeg" || /\.jpe?g$/i.test(file.name);
 }
 
 function loadHtmlImage(file: File): Promise<HTMLImageElement> {
@@ -33,7 +37,7 @@ function loadHtmlImage(file: File): Promise<HTMLImageElement> {
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("Impossible de lire l’image."));
+      reject(new Error("Impossible de lire cette image."));
     };
     img.src = url;
   });
@@ -80,21 +84,25 @@ async function canvasToJpeg(
   });
 }
 
-/** Compresse jusqu’à tenir sous la limite Vercel. */
-async function compressToFit(file: File): Promise<File> {
+/**
+ * Redimensionne (compression) puis convertit en JPEG pour réduire au maximum.
+ */
+async function compressAndConvertToJpeg(file: File): Promise<File> {
   const img = await loadHtmlImage(file);
-  const withWhiteBg =
-    mimeFromFile(file) === "image/png" || mimeFromFile(file) === "image/webp";
+  const withWhiteBg = !isJpeg(file);
   const base = file.name.replace(/\.[^.]+$/, "") || "image";
-
+  let bestBlob: Blob | null = null;
   let maxEdge = MAX_EDGE_START;
-  for (let round = 0; round < 10; round++) {
+
+  for (let round = 0; round < 12; round++) {
     const { width, height } = scaledSize(img.naturalWidth, img.naturalHeight, maxEdge);
     const canvas = drawToCanvas(img, width, height, withWhiteBg);
 
-    for (let q = 0.9; q >= 0.45; q -= 0.08) {
+    for (let q = 0.92; q >= 0.4; q -= 0.06) {
       const blob = await canvasToJpeg(canvas, q);
-      if (blob && blob.size <= MAX_UPLOAD_BYTES) {
+      if (!blob) continue;
+      if (!bestBlob || blob.size < bestBlob.size) bestBlob = blob;
+      if (blob.size <= MAX_UPLOAD_BYTES) {
         return new File([blob], `${base}.jpg`, {
           type: "image/jpeg",
           lastModified: Date.now(),
@@ -102,27 +110,33 @@ async function compressToFit(file: File): Promise<File> {
       }
     }
 
-    maxEdge = Math.round(maxEdge * 0.72);
+    maxEdge = Math.round(maxEdge * 0.68);
   }
 
+  const compressedSize = bestBlob?.size ?? 0;
   throw new Error(
-    `Impossible de compresser sous ${MAX_UPLOAD_LABEL} (fichier ${formatMo(file.size)}). Réduisez la résolution dans un éditeur.`,
+    `Fichier trop lourd après compression.\n` +
+      `• Votre fichier : ${formatSize(file.size)}\n` +
+      `• Après réduction + conversion JPEG : ${compressedSize ? formatSize(compressedSize) : "échec"}\n` +
+      `• Maximum autorisé : ${MAX_UPLOAD_LABEL} (limite Vercel)\n` +
+      `Réduisez la résolution dans un éditeur (Photoshop, GIMP, Photos) puis réessayez.`,
   );
 }
 
 export type PrepareUploadResult = {
   file: File;
-  /** true si le fichier a été compressé avant envoi */
-  compressed: boolean;
+  converted: boolean;
+  originalSize: number;
+  finalSize: number;
 };
 
 /**
- * ≤ 4,5 Mo : envoyé tel quel (JPEG, PNG, WebP…).
- * > 4,5 Mo : compression automatique puis envoi.
+ * JPEG léger ≤ 4,5 Mo : envoyé tel quel.
+ * Sinon : redimensionnement + conversion JPEG automatiques.
  */
 export async function prepareImageForUpload(file: File): Promise<File> {
-  const result = await prepareImageForUploadDetailed(file);
-  return result.file;
+  const r = await prepareImageForUploadDetailed(file);
+  return r.file;
 }
 
 export async function prepareImageForUploadDetailed(
@@ -131,7 +145,7 @@ export async function prepareImageForUploadDetailed(
   const type = (file.type || "").toLowerCase();
   if (BLOCKED.has(type) || /\.heic$/i.test(file.name)) {
     throw new Error(
-      "HEIC (iPhone) : exportez la photo en JPEG depuis la galerie, puis réessayez.",
+      "HEIC (iPhone) : exportez en JPEG depuis la galerie, puis réessayez.",
     );
   }
 
@@ -139,13 +153,27 @@ export async function prepareImageForUploadDetailed(
     throw new Error("Fichier vide.");
   }
 
-  if (file.size <= MAX_UPLOAD_BYTES) {
-    return { file, compressed: false };
+  if (isJpeg(file) && file.size <= MAX_UPLOAD_BYTES) {
+    try {
+      const img = await loadHtmlImage(file);
+      if (Math.max(img.naturalWidth, img.naturalHeight) <= MAX_EDGE_START) {
+        return {
+          file,
+          converted: false,
+          originalSize: file.size,
+          finalSize: file.size,
+        };
+      }
+    } catch {
+      /* conversion ci-dessous */
+    }
   }
 
-  const compressed = await compressToFit(file);
+  const converted = await compressAndConvertToJpeg(file);
   return {
-    file: compressed,
-    compressed: true,
+    file: converted,
+    converted: true,
+    originalSize: file.size,
+    finalSize: converted.size,
   };
 }

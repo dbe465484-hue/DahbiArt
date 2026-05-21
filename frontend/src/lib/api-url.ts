@@ -76,6 +76,16 @@ export function uploadApiBase(): string {
   if (typeof window !== "undefined") {
     const mapped = KNOWN_API_ORIGINS[window.location.hostname];
     if (mapped) return mapped;
+
+    const onLocal =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+    if (
+      onLocal &&
+      (API_URL.startsWith("http://localhost") || API_URL.startsWith("http://127.0.0.1"))
+    ) {
+      return "https://dahbi-art-api.vercel.app";
+    }
   }
 
   return API_URL;

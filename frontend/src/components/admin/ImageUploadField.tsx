@@ -55,10 +55,19 @@ export function ImageUploadField({
     setError(null);
     setCompressHint(null);
     try {
-      const { file: prepared, compressed } = await prepareImageForUploadDetailed(file);
-      if (compressed) {
+      const { file: prepared, converted, originalSize, finalSize } =
+        await prepareImageForUploadDetailed(file);
+      if (converted) {
+        const orig =
+          originalSize >= 1024 * 1024
+            ? `${(originalSize / (1024 * 1024)).toFixed(2)} Mo`
+            : `${Math.round(originalSize / 1024)} Ko`;
+        const fin =
+          finalSize >= 1024 * 1024
+            ? `${(finalSize / (1024 * 1024)).toFixed(2)} Mo`
+            : `${Math.round(finalSize / 1024)} Ko`;
         setCompressHint(
-          `Compressé automatiquement (${Math.round(file.size / 1024)} Ko → ${Math.round(prepared.size / 1024)} Ko) pour respecter la limite ${MAX_UPLOAD_LABEL}.`,
+          `Réduit et converti en JPEG : ${orig} → ${fin} (max ${MAX_UPLOAD_LABEL}).`,
         );
       }
       const { url } =
@@ -103,7 +112,7 @@ export function ImageUploadField({
             uploading ? "pointer-events-none opacity-60" : ""
           }`}
         >
-          {uploading ? "Préparation & envoi…" : value ? "Changer l’image" : "Choisir une image"}
+          {uploading ? "Compression & conversion JPEG…" : value ? "Changer l’image" : "Choisir une image"}
           <input
             ref={inputRef}
             type="file"
@@ -134,7 +143,7 @@ export function ImageUploadField({
       )}
 
       <p className="mt-2 text-xs text-stone-500">
-        JPEG, PNG, WebP… — jusqu’à {MAX_UPLOAD_LABEL} tel quel ; au-delà, compression automatique.
+        PNG/WebP convertis en JPEG ; gros fichiers compressés automatiquement (max {MAX_UPLOAD_LABEL}).
       </p>
 
       {compressHint && (
@@ -143,7 +152,7 @@ export function ImageUploadField({
 
       {error && (
         <div className="mt-2 space-y-1 text-sm text-red-800" role="alert">
-          <p>{error}</p>
+          <p className="whitespace-pre-line">{error}</p>
           {error.includes("Vercel Blob") && (
             <p className="text-xs text-red-700">
               Vercel → projet <strong>dahbi-art-api</strong> → Storage → Blob → lier le store →
