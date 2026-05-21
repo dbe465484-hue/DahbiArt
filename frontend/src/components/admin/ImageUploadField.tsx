@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { resolveMediaUrl } from "@/lib/media";
+import { prepareImageForUpload } from "@/lib/prepare-upload-image";
 
 type UploadKind = "painting" | "blog";
 
@@ -47,10 +48,11 @@ export function ImageUploadField({
     setUploading(true);
     setError(null);
     try {
+      const prepared = await prepareImageForUpload(file);
       const { url } =
         studio && kind === "blog"
-          ? await api.studio.uploadImage(token, file, slug)
-          : await api.admin.uploadImage(token, kind, file, slug);
+          ? await api.studio.uploadImage(token, prepared, slug)
+          : await api.admin.uploadImage(token, kind, prepared, slug);
       onChange(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Échec de l’upload");
@@ -85,7 +87,7 @@ export function ImageUploadField({
             uploading ? "pointer-events-none opacity-60" : ""
           }`}
         >
-          {uploading ? "Envoi en cours…" : value ? "Changer l’image" : "Choisir une image"}
+          {uploading ? "Préparation & envoi…" : value ? "Changer l’image" : "Choisir une image"}
           <input
             ref={inputRef}
             type="file"
@@ -114,6 +116,10 @@ export function ImageUploadField({
           Fichier : <span className="font-mono">{value}</span>
         </p>
       )}
+
+      <p className="mt-2 text-xs text-stone-500">
+        JPEG, PNG ou WebP — grosses photos et iPhone (HEIC) sont compressés automatiquement.
+      </p>
 
       {error && (
         <div className="mt-2 space-y-1 text-sm text-red-800" role="alert">

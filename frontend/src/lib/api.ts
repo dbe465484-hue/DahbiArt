@@ -329,19 +329,35 @@ async function uploadRequest(
   form.append("file", file);
   form.append("slug", slug);
 
+  const uploadBase = uploadApiBase().replace(/\/$/, "");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90_000);
+
   let res: Response;
   try {
-    const uploadBase = uploadApiBase().replace(/\/$/, "");
     res = await fetch(`${uploadBase}${path}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: form,
+      signal: controller.signal,
     });
-  } catch {
-    throw new ApiError(
-      "Impossible de joindre le serveur. Vérifiez que l’API est démarrée (npm run start:dev dans backend).",
-      0,
-    );
+  } catch (err) {
+    const onLocal = uploadBase.includes("localhost") || uploadBase.includes("127.0.0.1");
+    let message: string;
+    if (err instanceof Error && err.name === "AbortError") {
+      message =
+        "Envoi trop long (timeout). L’image sera compressée automatiquement au prochain essai — réessayez.";
+    } else if (onLocal) {
+      message = `Impossible de joindre l’API (${uploadBase}). Lancez le backend : cd backend && npm run start:dev`;
+    } else if (file.size > 4 * 1024 * 1024) {
+      message = `Connexion interrompue — fichier trop lourd (${(file.size / (1024 * 1024)).toFixed(1)} Mo). Réessayez : la compression automatique s’applique avant l’envoi.`;
+    } else {
+      message =
+        "Connexion interrompue pendant l’envoi (réseau ou image trop lourde). Réessayez avec une photo plus légère (JPEG).";
+    }
+    throw new ApiError(message, 0);
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!res.ok) {
