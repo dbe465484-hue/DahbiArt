@@ -28,7 +28,7 @@ import { UploadsService } from '../uploads/uploads.service';
 
 const imageUpload = FileInterceptor('file', {
   storage: memoryStorage(),
-  limits: { fileSize: 12 * 1024 * 1024 },
+  limits: { fileSize: 4.5 * 1024 * 1024 },
 });
 
 @Controller('studio')

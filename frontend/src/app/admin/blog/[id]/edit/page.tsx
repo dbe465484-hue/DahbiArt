@@ -26,6 +26,7 @@ export default function AdminEditBlogPostPage() {
     const token = getToken();
     if (!token) throw new Error("Non authentifié");
     await api.admin.blogPosts.update(token, id, data);
+    router.refresh();
     router.push("/admin/blog");
   }
 

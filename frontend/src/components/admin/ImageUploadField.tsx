@@ -5,7 +5,10 @@ import { useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { resolveMediaUrl } from "@/lib/media";
-import { prepareImageForUpload } from "@/lib/prepare-upload-image";
+import {
+  MAX_UPLOAD_LABEL,
+  prepareImageForUpload,
+} from "@/lib/prepare-upload-image";
 
 type UploadKind = "painting" | "blog";
 
@@ -33,6 +36,8 @@ export function ImageUploadField({
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Même URL Blob après remplacement → forcer le rafraîchissement de l’aperçu. */
+  const [previewVersion, setPreviewVersion] = useState(0);
 
   async function handleFile(file: File) {
     const token = getToken();
@@ -54,6 +59,7 @@ export function ImageUploadField({
           ? await api.studio.uploadImage(token, prepared, slug)
           : await api.admin.uploadImage(token, kind, prepared, slug);
       onChange(url);
+      setPreviewVersion(Date.now());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Échec de l’upload");
     } finally {
@@ -62,7 +68,9 @@ export function ImageUploadField({
     }
   }
 
-  const previewSrc = value ? resolveMediaUrl(value) : null;
+  const previewSrc = value
+    ? resolveMediaUrl(value, previewVersion || undefined)
+    : null;
 
   return (
     <div className="block">
@@ -71,6 +79,7 @@ export function ImageUploadField({
       {previewSrc && (
         <div className="relative mb-3 h-48 w-full max-w-sm overflow-hidden border border-stone-200 bg-stone-100">
           <Image
+            key={previewSrc}
             src={previewSrc}
             alt=""
             fill
@@ -118,7 +127,7 @@ export function ImageUploadField({
       )}
 
       <p className="mt-2 text-xs text-stone-500">
-        JPEG ou PNG — les PNG sont convertis en JPEG automatiquement (fond blanc si transparence).
+        JPEG ou PNG — max {MAX_UPLOAD_LABEL} par fichier (les petits PNG sont envoyés tels quels).
       </p>
 
       {error && (

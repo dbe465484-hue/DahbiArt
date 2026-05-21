@@ -1,8 +1,13 @@
-/** Limite sûre pour Vercel (proxy + serverless ~4,5 Mo). */
-const MAX_BYTES = 3.5 * 1024 * 1024;
-const MAX_EDGE = 1920;
-/** Limite navigateur (canvas) — les PNG pro ont souvent 6000+ px. */
-const MAX_CANVAS_DIM = 4096;
+/** Limite Vercel (corps de requête serverless). */
+export const MAX_UPLOAD_BYTES = 4.5 * 1024 * 1024;
+export const MAX_UPLOAD_LABEL = "4,5 Mo";
+
+const MAX_EDGE = 3200;
+const MAX_CANVAS_DIM = 8192;
+
+/** PNG/JPEG déjà légers : envoi tel quel (évite les échecs de conversion canvas). */
+const PASSTHROUGH_BYTES = 4 * 1024 * 1024;
+const PASSTHROUGH_EDGE = 3200;
 
 const ALLOWED = new Set([
   "image/jpeg",
@@ -16,7 +21,11 @@ function formatMo(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
 }
 
-function mimeFromFile(file: File): string {
+function formatKo(bytes: number) {
+  return `${Math.round(bytes / 1024)} Ko`;
+}
+
+export function mimeFromFile(file: File): string {
   if (file.type) return file.type;
   const n = file.name.toLowerCase();
   if (n.endsWith(".png")) return "image/png";
@@ -42,7 +51,6 @@ function targetSize(srcW: number, srcH: number) {
   };
 }
 
-/** Charge l’image — PNG via HTMLImageElement (plus fiable que createImageBitmap). */
 function loadHtmlImage(file: File): Promise<HTMLImageElement> {
   const url = URL.createObjectURL(file);
   return new Promise((resolve, reject) => {
@@ -53,7 +61,7 @@ function loadHtmlImage(file: File): Promise<HTMLImageElement> {
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("Impossible de décoder l’image PNG."));
+      reject(new Error("Impossible de décoder l’image."));
     };
     img.src = url;
   });
@@ -61,6 +69,34 @@ function loadHtmlImage(file: File): Promise<HTMLImageElement> {
 
 async function loadBitmap(file: File): Promise<ImageBitmap> {
   return createImageBitmap(file);
+}
+
+async function readDimensions(
+  file: File,
+): Promise<{ width: number; height: number }> {
+  if (isPng(file)) {
+    const img = await loadHtmlImage(file);
+    return { width: img.naturalWidth, height: img.naturalHeight };
+  }
+  try {
+    const bitmap = await loadBitmap(file);
+    const size = { width: bitmap.width, height: bitmap.height };
+    bitmap.close();
+    return size;
+  } catch {
+    const img = await loadHtmlImage(file);
+    return { width: img.naturalWidth, height: img.naturalHeight };
+  }
+}
+
+async function canPassthrough(file: File): Promise<boolean> {
+  if (file.size > PASSTHROUGH_BYTES) return false;
+  try {
+    const { width, height } = await readDimensions(file);
+    return Math.max(width, height) <= PASSTHROUGH_EDGE;
+  } catch {
+    return false;
+  }
 }
 
 async function loadSource(
@@ -108,29 +144,35 @@ async function loadSource(
 }
 
 async function canvasToJpeg(canvas: HTMLCanvasElement): Promise<Blob> {
-  let quality = 0.88;
-  for (let i = 0; i < 8; i++) {
+  let quality = 0.9;
+  for (let i = 0; i < 10; i++) {
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob(resolve, "image/jpeg", quality);
     });
-    if (blob && blob.size <= MAX_BYTES) return blob;
-    quality -= 0.08;
+    if (blob && blob.size <= MAX_UPLOAD_BYTES) return blob;
+    quality -= 0.06;
   }
   const last = await new Promise<Blob | null>((resolve) => {
-    canvas.toBlob(resolve, "image/jpeg", 0.55);
+    canvas.toBlob(resolve, "image/jpeg", 0.5);
   });
   if (!last) {
-    throw new Error("Impossible de convertir le PNG en JPEG.");
+    throw new Error("Impossible de convertir l’image en JPEG.");
   }
   return last;
 }
 
 /**
- * Redimensionne et compresse l’image dans le navigateur avant upload.
- * Les PNG (transparence, très grande taille) sont convertis en JPEG.
+ * Prépare l’image avant upload (max {MAX_UPLOAD_LABEL}).
+ * Petits PNG/JPEG valides sont envoyés sans recompression.
  */
 export async function prepareImageForUpload(file: File): Promise<File> {
   const type = mimeFromFile(file);
+
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error(
+      `Fichier trop lourd (${formatMo(file.size)}). Maximum : ${MAX_UPLOAD_LABEL}.`,
+    );
+  }
 
   if (type === "image/heic" || type === "image/heif" || /\.heic$/i.test(file.name)) {
     throw new Error(
@@ -142,17 +184,8 @@ export async function prepareImageForUpload(file: File): Promise<File> {
     throw new Error("Format non supporté. Utilisez JPEG ou PNG.");
   }
 
-  if (file.size <= MAX_BYTES && type === "image/jpeg") {
-    try {
-      const bitmap = await loadBitmap(file);
-      if (Math.max(bitmap.width, bitmap.height) <= MAX_EDGE) {
-        bitmap.close();
-        return file;
-      }
-      bitmap.close();
-    } catch {
-      /* resize below */
-    }
+  if (await canPassthrough(file)) {
+    return file;
   }
 
   let source: Awaited<ReturnType<typeof loadSource>>;
@@ -161,8 +194,8 @@ export async function prepareImageForUpload(file: File): Promise<File> {
   } catch {
     throw new Error(
       isPng(file)
-        ? "PNG illisible ou trop grand pour le navigateur. Ouvrez-le dans un éditeur, exportez en JPEG, puis réessayez."
-        : "Impossible de lire cette image. Essayez JPEG ou PNG.",
+        ? `PNG illisible (${formatKo(file.size)}). Réexportez en JPEG ou réduisez la résolution.`
+        : "Impossible de lire cette image.",
     );
   }
 
@@ -178,9 +211,9 @@ export async function prepareImageForUpload(file: File): Promise<File> {
   source.draw(ctx, width, height);
 
   const blob = await canvasToJpeg(canvas);
-  if (blob.size > MAX_BYTES) {
+  if (blob.size > MAX_UPLOAD_BYTES) {
     throw new Error(
-      `Image encore trop lourde après conversion (${formatMo(blob.size)}). Réduisez la résolution du PNG.`,
+      `Image encore trop lourde après compression (${formatMo(blob.size)}). Maximum : ${MAX_UPLOAD_LABEL}.`,
     );
   }
 

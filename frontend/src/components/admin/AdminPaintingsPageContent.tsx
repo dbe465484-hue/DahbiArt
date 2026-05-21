@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { IconCheck, IconPaintings, IconPlus, IconTag } from "@/components/admin/AdminDashboardIcons";
 import { AdminDataTable } from "@/components/admin/AdminDataTable";
@@ -25,6 +26,7 @@ function IconImport() {
 }
 
 export function AdminPaintingsPageContent() {
+  const pathname = usePathname();
   const { getToken } = useAuth();
   const [paintings, setPaintings] = useState<PaintingRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,7 @@ export function AdminPaintingsPageContent() {
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, pathname]);
 
   const activePaintings = useMemo(
     () => paintings.filter((p) => !isDeleted(p)),
@@ -244,7 +246,8 @@ export function AdminPaintingsPageContent() {
                 className="relative block h-16 w-16 overflow-hidden rounded-lg bg-stone-100 ring-1 ring-stone-200/80 transition hover:ring-sky-200"
               >
                 <Image
-                  src={resolveMediaUrl(p.image)}
+                  key={`${p.id}-${p.updatedAt ?? ""}-${p.image}`}
+                  src={resolveMediaUrl(p.image, p.updatedAt ?? p.id)}
                   alt=""
                   fill
                   className="object-cover"

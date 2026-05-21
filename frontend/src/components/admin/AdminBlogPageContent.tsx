@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { IconArticle, IconCheck, IconPlus } from "@/components/admin/AdminDashboardIcons";
 import { AdminDataTable } from "@/components/admin/AdminDataTable";
@@ -21,6 +22,7 @@ type Props = { mode?: "admin" | "studio" };
 export function AdminBlogPageContent({ mode = "admin" }: Props) {
   const base = mode === "studio" ? "/studio/blog" : "/admin/blog";
   const blogApi = mode === "studio" ? api.studio.blogPosts : api.admin.blogPosts;
+  const pathname = usePathname();
   const { getToken } = useAuth();
   const [posts, setPosts] = useState<BlogPostRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ export function AdminBlogPageContent({ mode = "admin" }: Props) {
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, pathname]);
 
   const activePosts = useMemo(() => posts.filter((p) => !isDeleted(p)), [posts]);
 
@@ -193,7 +195,8 @@ export function AdminBlogPageContent({ mode = "admin" }: Props) {
                 className="relative block h-16 w-24 overflow-hidden rounded-lg bg-stone-100 ring-1 ring-stone-200/80 transition hover:ring-sky-200"
               >
                 <Image
-                  src={resolveMediaUrl(p.image)}
+                  key={`${p.id}-${p.updatedAt ?? ""}-${p.image}`}
+                  src={resolveMediaUrl(p.image, p.updatedAt ?? p.id)}
                   alt=""
                   fill
                   className="object-cover"

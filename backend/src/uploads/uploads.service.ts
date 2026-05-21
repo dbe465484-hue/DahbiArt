@@ -10,7 +10,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { slugify } from '../common/utils/slugify';
 
-const MAX_BYTES = 12 * 1024 * 1024;
+/** Aligné sur la limite corps de requête Vercel (~4,5 Mo) */
+const MAX_BYTES = 4.5 * 1024 * 1024;
 const ALLOWED = new Set([
   'image/jpeg',
   'image/png',
@@ -63,7 +64,7 @@ export class UploadsService {
       throw new BadRequestException('Fichier manquant');
     }
     if (file.size > MAX_BYTES) {
-      throw new BadRequestException('Image trop volumineuse (max 12 Mo)');
+      throw new BadRequestException('Image trop volumineuse (max 4,5 Mo)');
     }
     if (!ALLOWED.has(file.mimetype)) {
       throw new BadRequestException(

@@ -368,7 +368,7 @@ async function uploadRequest(
       else if (body.message) message = body.message;
     } catch {
       if (res.status === 413) {
-        message = "Image trop volumineuse pour l’hébergement (max ~4 Mo). Réduisez le fichier ou réessayez.";
+        message = "Image trop volumineuse pour l’hébergement (max 4,5 Mo). Réduisez le fichier ou réessayez.";
       } else {
         message = `Échec de l’upload (HTTP ${res.status})`;
       }
