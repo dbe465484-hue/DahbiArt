@@ -29,7 +29,7 @@ Si `frontend` pointe vers `/` au lieu de `frontend/` : faites **Edit** sur la st
 | Variable | Service | Valeur |
 |----------|---------|--------|
 | `DATABASE_URL` | backend | (Neon via **Storage**, projet **dahbi-art-api**) |
-| `BLOB_READ_WRITE_TOKEN` | **dahbi-art-api uniquement** | créé automatiquement en liant **Vercel Blob** au projet API |
+| `BLOB_READ_WRITE_TOKEN` | **dahbi-art-api** et **dahbi-art** | lier le même store Blob aux deux projets (upload direct navigateur) |
 | `DB_SYNCHRONIZE` | backend | `false` en prod (ne pas forcer `true` : risque d’erreur si données incomplètes) |
 | `JWT_SECRET` | backend | chaîne aléatoire longue |
 | `ADMIN_EMAIL` | backend | email admin |

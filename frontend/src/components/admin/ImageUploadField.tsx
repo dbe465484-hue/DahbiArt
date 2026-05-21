@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
+import { uploadImageToBlob } from "@/lib/blob-upload";
 import { resolveMediaUrl } from "@/lib/media";
 import {
   MAX_UPLOAD_LABEL,
@@ -70,10 +71,16 @@ export function ImageUploadField({
           `Réduit et converti en JPEG : ${orig} → ${fin} (max ${MAX_UPLOAD_LABEL}).`,
         );
       }
-      const { url } =
-        studio && kind === "blog"
-          ? await api.studio.uploadImage(token, prepared, slug)
-          : await api.admin.uploadImage(token, kind, prepared, slug);
+      let url: string;
+      try {
+        ({ url } = await uploadImageToBlob(kind, prepared, slug, token));
+      } catch {
+        const legacy =
+          studio && kind === "blog"
+            ? await api.studio.uploadImage(token, prepared, slug)
+            : await api.admin.uploadImage(token, kind, prepared, slug);
+        url = legacy.url;
+      }
       onChange(url);
       setPreviewVersion(Date.now());
     } catch (err) {

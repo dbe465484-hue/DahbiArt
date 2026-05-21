@@ -92,7 +92,8 @@ async function compressAndConvertToJpeg(file: File): Promise<File> {
   const withWhiteBg = !isJpeg(file);
   const base = file.name.replace(/\.[^.]+$/, "") || "image";
   let bestBlob: Blob | null = null;
-  let maxEdge = MAX_EDGE_START;
+  let maxEdge =
+    file.size > 25 * 1024 * 1024 ? 2400 : file.size > 10 * 1024 * 1024 ? 2800 : MAX_EDGE_START;
 
   for (let round = 0; round < 12; round++) {
     const { width, height } = scaledSize(img.naturalWidth, img.naturalHeight, maxEdge);
