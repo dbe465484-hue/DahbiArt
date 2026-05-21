@@ -349,11 +349,11 @@ async function uploadRequest(
         "Envoi trop long (timeout). L’image sera compressée automatiquement au prochain essai — réessayez.";
     } else if (onLocal) {
       message = `Impossible de joindre l’API (${uploadBase}). Lancez le backend : cd backend && npm run start:dev`;
-    } else if (file.size > 4 * 1024 * 1024) {
-      message = `Connexion interrompue — fichier trop lourd (${(file.size / (1024 * 1024)).toFixed(1)} Mo). Réessayez : la compression automatique s’applique avant l’envoi.`;
+    } else if (file.size > 4.5 * 1024 * 1024) {
+      message = `Connexion interrompue (${(file.size / (1024 * 1024)).toFixed(1)} Mo). Réessayez : les fichiers > 4,5 Mo sont compressés automatiquement avant envoi.`;
     } else {
       message =
-        "Connexion interrompue pendant l’envoi (réseau ou image trop lourde). Réessayez avec une photo plus légère (JPEG).";
+        "Connexion interrompue (réseau ou API). En local : lancez `cd backend && npm run start:dev`. Sinon réessayez.";
     }
     throw new ApiError(message, 0);
   } finally {

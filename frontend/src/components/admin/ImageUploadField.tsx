@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { resolveMediaUrl } from "@/lib/media";
 import {
   MAX_UPLOAD_LABEL,
-  prepareImageForUpload,
+  prepareImageForUploadDetailed,
 } from "@/lib/prepare-upload-image";
 
 type UploadKind = "painting" | "blog";
@@ -38,6 +38,7 @@ export function ImageUploadField({
   const [error, setError] = useState<string | null>(null);
   /** Même URL Blob après remplacement → forcer le rafraîchissement de l’aperçu. */
   const [previewVersion, setPreviewVersion] = useState(0);
+  const [compressHint, setCompressHint] = useState<string | null>(null);
 
   async function handleFile(file: File) {
     const token = getToken();
@@ -52,8 +53,14 @@ export function ImageUploadField({
 
     setUploading(true);
     setError(null);
+    setCompressHint(null);
     try {
-      const prepared = await prepareImageForUpload(file);
+      const { file: prepared, compressed } = await prepareImageForUploadDetailed(file);
+      if (compressed) {
+        setCompressHint(
+          `Compressé automatiquement (${Math.round(file.size / 1024)} Ko → ${Math.round(prepared.size / 1024)} Ko) pour respecter la limite ${MAX_UPLOAD_LABEL}.`,
+        );
+      }
       const { url } =
         studio && kind === "blog"
           ? await api.studio.uploadImage(token, prepared, slug)
@@ -127,8 +134,12 @@ export function ImageUploadField({
       )}
 
       <p className="mt-2 text-xs text-stone-500">
-        Tous formats image (JPEG, PNG, WebP…) — envoyés tels quels, max {MAX_UPLOAD_LABEL} (limite Vercel).
+        JPEG, PNG, WebP… — jusqu’à {MAX_UPLOAD_LABEL} tel quel ; au-delà, compression automatique.
       </p>
+
+      {compressHint && (
+        <p className="mt-2 text-xs text-amber-900">{compressHint}</p>
+      )}
 
       {error && (
         <div className="mt-2 space-y-1 text-sm text-red-800" role="alert">
