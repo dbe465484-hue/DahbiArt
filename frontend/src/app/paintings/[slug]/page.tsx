@@ -2,9 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCartButtons } from "@/components/paintings/AddToCartButtons";
 import { PaintingDetailMedia } from "@/components/paintings/PaintingDetailMedia";
+import { PaintingRelated } from "@/components/paintings/PaintingRelated";
 import { RoomVisualizer } from "@/components/paintings/RoomVisualizer";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { formatPrice, getPainting, getStaticPaintingSlugs } from "@/lib/paintings";
+import { formatPrice, getPainting, getPaintings, getStaticPaintingSlugs } from "@/lib/paintings";
+import {
+  resolveShippingZone,
+  shippingCostEur,
+  shippingDelayHint,
+  shippingZoneLabel,
+} from "@/lib/shipping";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -20,10 +27,13 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function PaintingDetailPage({ params }: Props) {
   const { slug } = await params;
-  const painting = await getPainting(slug);
+  const [painting, allPaintings] = await Promise.all([getPainting(slug), getPaintings()]);
   if (!painting) notFound();
 
   const sold = painting.status === "sold";
+  const canPrint = Boolean(painting.printAvailable && (painting.printPrice ?? 0) > 0);
+  const zone = resolveShippingZone("MA");
+  const sampleShipping = shippingCostEur("MA");
 
   return (
     <>
@@ -38,10 +48,12 @@ export default async function PaintingDetailPage({ params }: Props) {
             <p className="mt-6 text-stone-700">{painting.description}</p>
             <p className="mt-8 font-serif text-2xl text-amber-800">
               {sold
-                ? painting.printAvailable
+                ? canPrint
                   ? `Vendu — tirage dès ${formatPrice(painting.printPrice ?? 0)}`
                   : "Vendu"
-                : formatPrice(painting.price)}
+                : canPrint
+                  ? `${formatPrice(painting.price)} · tirage dès ${formatPrice(painting.printPrice ?? 0)}`
+                  : formatPrice(painting.price)}
             </p>
             <AddToCartButtons painting={painting} />
             <RoomVisualizer
@@ -49,14 +61,28 @@ export default async function PaintingDetailPage({ params }: Props) {
               paintingTitle={painting.title}
               dimensions={painting.dimensions}
             />
-            <p className="mt-8 text-sm text-stone-500">
-              Livraison offerte au Maroc et en Europe sur les originaux. Emballage professionnel.
-            </p>
+            <div className="mt-8 space-y-2 text-sm text-stone-500">
+              <p>
+                Livraison {shippingZoneLabel(zone)} à partir de{" "}
+                {sampleShipping > 0 ? formatPrice(sampleShipping) : "sur devis"} — délai indicatif{" "}
+                {shippingDelayHint(zone)}. Emballage professionnel et assurance transport.
+              </p>
+              <p>
+                Une question sur cette œuvre ?{" "}
+                <Link
+                  href={`/contact?subject=${encodeURIComponent(`Œuvre : ${painting.title}`)}`}
+                  className="text-amber-800 underline hover:text-amber-950"
+                >
+                  Contactez l&apos;atelier
+                </Link>
+              </p>
+            </div>
             <Link href="/paintings" className="mt-6 inline-block text-sm text-amber-800 hover:underline">
               ← Retour au catalogue
             </Link>
           </div>
         </div>
+        <PaintingRelated paintings={allPaintings} currentSlug={slug} />
       </section>
     </>
   );

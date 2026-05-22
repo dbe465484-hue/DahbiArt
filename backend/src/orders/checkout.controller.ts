@@ -1,12 +1,15 @@
 import {
   Body,
   Controller,
+  Get,
   Headers,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { OrdersService } from './orders.service';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -16,7 +19,10 @@ import { CreateCheckoutDto } from './dto/create-checkout.dto';
 
 @Controller('checkout')
 export class CheckoutController {
-  constructor(private readonly checkout: CheckoutService) {}
+  constructor(
+    private readonly checkout: CheckoutService,
+    private readonly orders: OrdersService,
+  ) {}
 
   @Post('session')
   @UseGuards(JwtAuthGuard)
@@ -25,6 +31,15 @@ export class CheckoutController {
     @Body() dto: CreateCheckoutDto,
   ) {
     return this.checkout.createSession(user.id, dto);
+  }
+
+  @Get('session-status')
+  @UseGuards(JwtAuthGuard)
+  sessionStatus(
+    @CurrentUser() user: { id: string },
+    @Query('session_id') sessionId: string,
+  ) {
+    return this.orders.findByStripeSessionForUser(sessionId, user.id);
   }
 
   @Post('confirm-dev/:orderId')

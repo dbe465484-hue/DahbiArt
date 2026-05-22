@@ -24,10 +24,7 @@ export class CheckoutService {
   }
 
   isDevCheckoutAllowed() {
-    return (
-      this.config.get<string>('CHECKOUT_DEV_MODE') === 'true' ||
-      !this.isStripeEnabled()
-    );
+    return this.config.get<string>('CHECKOUT_DEV_MODE') === 'true';
   }
 
   async createSession(userId: string, dto: CreateCheckoutDto) {
@@ -85,7 +82,7 @@ export class CheckoutService {
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: lineItems,
-      success_url: `${frontend}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${frontend}/checkout/success?orderId=${order.id}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${frontend}/checkout/cancel?orderId=${order.id}`,
       customer_email: order.customerEmail,
       metadata: {

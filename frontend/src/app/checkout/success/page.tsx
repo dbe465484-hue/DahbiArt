@@ -15,10 +15,12 @@ function CheckoutSuccessInner() {
   const { getToken } = useAuth();
   const { clearCart } = useCart();
   const orderId = searchParams.get("orderId");
+  const sessionId = searchParams.get("session_id");
   const isDev = searchParams.get("dev") === "1";
   const [reference, setReference] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cleared, setCleared] = useState(false);
+  const [loading, setLoading] = useState(Boolean(sessionId || (isDev && orderId)));
 
   useEffect(() => {
     if (cleared) return;
@@ -27,17 +29,64 @@ function CheckoutSuccessInner() {
   }, [clearCart, cleared]);
 
   useEffect(() => {
-    if (!isDev || !orderId) return;
     const token = getToken();
     if (!token) {
-      router.replace(`/login?redirect=/checkout/success?orderId=${orderId}&dev=1`);
+      if (isDev && orderId) {
+        router.replace(
+          `/login?redirect=${encodeURIComponent(`/checkout/success?orderId=${orderId}&dev=1`)}`,
+        );
+      } else if (sessionId) {
+        router.replace(
+          `/login?redirect=${encodeURIComponent(`/checkout/success?session_id=${sessionId}${orderId ? `&orderId=${orderId}` : ""}`)}`,
+        );
+      }
       return;
     }
-    api.checkout
-      .confirmDev(token, orderId)
-      .then((res) => setReference(res.reference))
-      .catch((err) => setError(err instanceof Error ? err.message : "Erreur"));
-  }, [isDev, orderId, getToken, router]);
+
+    if (isDev && orderId) {
+      api.checkout
+        .confirmDev(token, orderId)
+        .then((res) => {
+          setReference(res.reference);
+          setLoading(false);
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : "Erreur");
+          setLoading(false);
+        });
+      return;
+    }
+
+    if (sessionId) {
+      let attempts = 0;
+      const poll = () => {
+        api.checkout
+          .sessionStatus(token, sessionId)
+          .then((res) => {
+            if (res.status === "paid" || res.paidAt) {
+              setReference(res.reference);
+              setLoading(false);
+              return;
+            }
+            attempts += 1;
+            if (attempts < 12) {
+              setTimeout(poll, 1500);
+            } else {
+              setReference(res.reference);
+              setLoading(false);
+            }
+          })
+          .catch((err) => {
+            setError(err instanceof Error ? err.message : "Erreur");
+            setLoading(false);
+          });
+      };
+      poll();
+      return;
+    }
+
+    setLoading(false);
+  }, [isDev, orderId, sessionId, getToken, router]);
 
   return (
     <div className="mx-auto max-w-lg px-4 py-20 text-center">
@@ -49,16 +98,19 @@ function CheckoutSuccessInner() {
           <>
             <h1 className="mt-4 font-serif text-3xl text-stone-900">Merci pour votre commande</h1>
             <p className="mt-4 text-sm text-stone-600">
-              {isDev && !reference
+              {loading
                 ? "Confirmation du paiement en cours…"
                 : reference
                   ? `Référence : ${reference}`
-                  : "Votre paiement a été enregistré. Vous recevrez un email de confirmation."}
+                  : "Votre paiement a été enregistré. Un email de confirmation vous sera envoyé sous peu."}
             </p>
           </>
         )}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link href="/account/orders" className={`inline-flex justify-center ${homeBtnPrimary}`}>
+          <Link
+            href={orderId ? `/account/orders/${orderId}` : "/account/orders"}
+            className={`inline-flex justify-center ${homeBtnPrimary}`}
+          >
             Suivre ma commande
           </Link>
           <Link

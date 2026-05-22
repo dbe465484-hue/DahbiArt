@@ -22,6 +22,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { api } from "@/lib/api";
 import { formatPrice, paintingImage } from "@/lib/paintings";
+import {
+  resolveShippingZone,
+  shippingCostEur,
+  shippingDelayHint,
+  shippingZoneLabel,
+} from "@/lib/shipping";
 import type { CartItem } from "@/lib/types";
 
 function linePrice(item: CartItem) {
@@ -86,8 +92,6 @@ function CheckoutLineItem({
   );
 }
 
-const SHIPPING_FLAT = Number(process.env.NEXT_PUBLIC_SHIPPING_FLAT_EUR ?? "0") || 0;
-
 export function CheckoutPageContent() {
   const { items, total, removeItem, isHydrated, count } = useCart();
   const { user, isLoading, isAuthenticated, getToken } = useAuth();
@@ -96,7 +100,9 @@ export function CheckoutPageContent() {
   const [paying, setPaying] = useState(false);
   const [shipping, setShipping] = useState<ShippingFormData | null>(null);
 
-  const shippingCost = SHIPPING_FLAT;
+  const country = shipping?.country ?? "MA";
+  const shippingZone = resolveShippingZone(country);
+  const shippingCost = shipping ? shippingCostEur(country) : 0;
   const grandTotal = total + shippingCost;
 
   useEffect(() => {
@@ -220,8 +226,8 @@ export function CheckoutPageContent() {
                 <div className={accountCardClass}>
                   <h2 className="font-serif text-xl text-stone-900">Paiement</h2>
                   <p className="mt-2 text-sm text-stone-500">
-                    Paiement sécurisé par carte (Stripe). En local, le paiement est simulé
-                    automatiquement.
+                    Paiement sécurisé par carte (Stripe). Vous recevrez un email de confirmation
+                    après validation du paiement.
                   </p>
                   {payError && (
                     <p className="mt-4 rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -258,9 +264,16 @@ export function CheckoutPageContent() {
                       <span>{formatPrice(total)}</span>
                     </div>
                     <div className="flex justify-between text-stone-400">
-                      <span>Livraison</span>
+                      <span>
+                        Livraison ({shippingZoneLabel(shippingZone)})
+                      </span>
                       <span>{shippingCost > 0 ? formatPrice(shippingCost) : "Offerte"}</span>
                     </div>
+                    {shippingCost > 0 && (
+                      <p className="text-xs text-stone-500">
+                        Délai indicatif : {shippingDelayHint(shippingZone)}
+                      </p>
+                    )}
                   </div>
                   <div className="mt-4 flex justify-between border-t border-white/15 pt-4">
                     <span className="font-medium">Total</span>

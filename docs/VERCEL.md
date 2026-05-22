@@ -34,7 +34,12 @@ Si `frontend` pointe vers `/` au lieu de `frontend/` : faites **Edit** sur la st
 | `JWT_SECRET` | backend | chaîne aléatoire longue |
 | `ADMIN_EMAIL` | backend | email admin |
 | `ADMIN_PASSWORD` | backend | mot de passe |
-| `CHECKOUT_DEV_MODE` | backend | `true` (sans Stripe) |
+| `CHECKOUT_DEV_MODE` | backend | `true` en dev ; **`false` en prod** avec Stripe |
+| `STRIPE_SECRET_KEY` | backend | clé secrète Stripe (prod : `sk_live_…`) |
+| `STRIPE_WEBHOOK_SECRET` | backend | webhook `checkout.session.completed` → `https://dahbi-art-api.vercel.app/checkout/webhook` |
+| `SHIPPING_MA_EUR` / `SHIPPING_EU_EUR` / `SHIPPING_INTL_EUR` | backend | ex. `49` / `89` / `129` |
+| `COMMANDE_NOTIFY_EMAILS` | backend | emails équipe (commandes payées) |
+| `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | backend | emails clients (confirmation + expédition) |
 | `SEED_PAINTINGS` | backend | `true` (optionnel, 1ère fois) |
 
 **Ne pas** définir `NEXT_PUBLIC_API_URL` à `localhost` sur Vercel (sinon la boutique affiche le catalogue statique).
@@ -43,6 +48,7 @@ Si `frontend` pointe vers `/` au lieu de `frontend/` : faites **Edit** sur la st
 |----------|--------|------|
 | `BACKEND_INTERNAL_URL` | **dahbi-art** | URL absolue de l’API pour les pages serveur (`https://dahbi-art-api.vercel.app`) |
 | `NEXT_PUBLIC_BACKEND_URL` | dahbi-art | `/api` (navigateur, rewrite) |
+| `NEXT_PUBLIC_SHIPPING_MA_EUR` / `EU` / `INTL` | dahbi-art | alignés sur le backend (affichage checkout / fiches œuvre) |
 | `NEXT_PUBLIC_API_ORIGIN` | dahbi-art (optionnel) | Upload direct vers l’API si le domaine change |
 
 `FRONTEND_URL` est aussi injecté automatiquement pour le service `frontend`.

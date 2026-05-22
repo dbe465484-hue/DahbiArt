@@ -17,6 +17,10 @@ import { OrderItem } from './entities/order-item.entity';
 import { Order } from './entities/order.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { OrdersNotificationService } from './orders-notification.service';
+import {
+  resolveShippingZone,
+  shippingAmountForZone,
+} from './shipping-pricing';
 
 export type OrderHistoryEventDto = {
   id: string;
@@ -210,10 +214,19 @@ export class OrdersService {
     return `${prefix}${String(seq).padStart(5, '0')}`;
   }
 
-  private getShippingAmount(): number {
-    const raw = this.config.get<string>('SHIPPING_FLAT_EUR', '0');
-    const n = parseFloat(raw);
-    return Number.isFinite(n) && n >= 0 ? n : 0;
+  getShippingAmount(countryCode: string): number {
+    const flatOnly = this.config.get<string>('SHIPPING_FLAT_EUR', '').trim();
+    if (flatOnly) {
+      const n = parseFloat(flatOnly);
+      if (Number.isFinite(n) && n >= 0) return n;
+    }
+    const zone = resolveShippingZone(countryCode);
+    return shippingAmountForZone(zone, {
+      ma: this.config.get<string>('SHIPPING_MA_EUR'),
+      eu: this.config.get<string>('SHIPPING_EU_EUR'),
+      intl: this.config.get<string>('SHIPPING_INTL_EUR'),
+      flatFallback: flatOnly || '0',
+    });
   }
 
   async createPendingOrder(
@@ -299,7 +312,9 @@ export class OrdersService {
       (sum, l) => sum + l.unitPrice * l.quantity,
       0,
     );
-    const shippingAmount = this.getShippingAmount();
+    const shippingAmount = this.getShippingAmount(
+      shipping.country.trim().toUpperCase() || 'MA',
+    );
     const total = subtotal + shippingAmount;
     const reference = await this.nextReference();
 
@@ -456,6 +471,20 @@ export class OrdersService {
     await this.ordersRepo.update(orderId, { stripeSessionId: sessionId });
   }
 
+  async findByStripeSessionForUser(sessionId: string, userId: string) {
+    const order = await this.ordersRepo.findOne({
+      where: { stripeSessionId: sessionId, userId },
+    });
+    if (!order) throw new NotFoundException('Commande introuvable');
+    return {
+      id: order.id,
+      reference: order.reference,
+      status: order.status,
+      total: this.num(order.total),
+      paidAt: order.paidAt?.toISOString(),
+    };
+  }
+
   private async finalizePaid(order: Order, source: 'stripe' | 'dev' | 'manual') {
     await this.markOriginalsSold(order);
     const paidAt = new Date();
@@ -472,6 +501,7 @@ export class OrdersService {
     );
     const full = await this.findById(order.id);
     await this.emailNotifications.notifyOrderPaid(full);
+    await this.emailNotifications.notifyCustomerOrderConfirmed(full);
     await this.appNotifications.notifyOrderConfirmed(full);
     await this.appNotifications.notifyStaffNewOrder(full);
   }
@@ -589,8 +619,14 @@ export class OrdersService {
         ? `${actorPart} — ${carrier} / ${tracking}`
         : `${actorPart} — ${carrier}`;
       await this.recordEvent(id, 'shipped', msg, options?.actor);
+      const full = await this.findById(id);
       await this.appNotifications.notifyOrderShipped(
         order,
+        options?.shippingCarrier?.trim(),
+        options?.shippingTrackingNumber?.trim(),
+      );
+      await this.emailNotifications.notifyCustomerOrderShipped(
+        full,
         options?.shippingCarrier?.trim(),
         options?.shippingTrackingNumber?.trim(),
       );

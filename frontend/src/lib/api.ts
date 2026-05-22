@@ -651,6 +651,16 @@ export const api = {
         `/checkout/confirm-dev/${orderId}`,
         { method: "POST", token },
       ),
+    sessionStatus: (token: string, sessionId: string) =>
+      request<{
+        id: string;
+        reference: string;
+        status: OrderStatus;
+        total: number;
+        paidAt?: string;
+      }>(`/checkout/session-status?session_id=${encodeURIComponent(sessionId)}`, {
+        token,
+      }),
   },
 
   commande: {
