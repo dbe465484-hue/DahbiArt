@@ -1,9 +1,12 @@
+"use client";
+
 import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
+import { PAINTING_PLACEHOLDER } from "@/lib/paintings";
 
 type Props = {
   src: string;
   alt: string;
-  /** Zone d’affichage (le tableau reste entier à l’intérieur). */
   aspectClass?: string;
   className?: string;
   imageClassName?: string;
@@ -11,7 +14,7 @@ type Props = {
   priority?: boolean;
 };
 
-/** Affiche un tableau en entier (object-contain), sans recadrage. */
+/** Affiche un tableau en entier (object-contain), avec repli si image absente. */
 export function PaintingFrame({
   src,
   alt,
@@ -21,14 +24,27 @@ export function PaintingFrame({
   sizes = "300px",
   priority,
 }: Props) {
+  const [currentSrc, setCurrentSrc] = useState(src || PAINTING_PLACEHOLDER);
+
+  useEffect(() => {
+    setCurrentSrc(src || PAINTING_PLACEHOLDER);
+  }, [src]);
+
+  const onError = useCallback(() => {
+    setCurrentSrc((prev) =>
+      prev === PAINTING_PLACEHOLDER ? prev : PAINTING_PLACEHOLDER,
+    );
+  }, []);
+
   return (
     <div className={`relative ${aspectClass} overflow-hidden bg-[#f5f2eb] ${className}`}>
       <Image
-        src={src}
+        src={currentSrc}
         alt={alt}
         fill
         sizes={sizes}
         priority={priority}
+        onError={onError}
         className={`object-contain object-center p-2 ${imageClassName}`}
       />
     </div>

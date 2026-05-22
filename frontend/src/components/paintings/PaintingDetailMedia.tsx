@@ -5,10 +5,12 @@ import { ArtisticPaintingFrame } from "@/components/paintings/ArtisticPaintingFr
 import { FavoriteButton } from "@/components/paintings/FavoriteButton";
 import { PaintingFrame } from "@/components/paintings/PaintingFrame";
 import { PaintingImageLightbox } from "@/components/paintings/PaintingImageLightbox";
+import { resolvePaintingImageSrc } from "@/lib/paintings";
 import type { Painting } from "@/lib/types";
 
 export function PaintingDetailMedia({ painting }: { painting: Painting }) {
   const [lightbox, setLightbox] = useState(false);
+  const imageSrc = resolvePaintingImageSrc(painting.image, painting.slug);
 
   return (
     <div className="relative">
@@ -20,7 +22,7 @@ export function PaintingDetailMedia({ painting }: { painting: Painting }) {
       >
         <ArtisticPaintingFrame>
           <PaintingFrame
-            src={painting.image}
+            src={imageSrc}
             alt={painting.title}
             aspectClass="aspect-[4/5]"
             sizes="(max-width:1024px) 100vw, 50vw"
@@ -39,7 +41,7 @@ export function PaintingDetailMedia({ painting }: { painting: Painting }) {
         </span>
       )}
       <PaintingImageLightbox
-        src={painting.image}
+        src={imageSrc}
         alt={painting.title}
         open={lightbox}
         onClose={() => setLightbox(false)}

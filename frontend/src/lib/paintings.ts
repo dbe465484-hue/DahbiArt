@@ -6,6 +6,26 @@ import { fetchApi } from "./fetch-api";
 /** Images locales (dossier `tableaux/` → `npm run tableaux:sync`) */
 export const paintingImage = (slug: string) => `/paintings/${slug}.webp`;
 
+export const PAINTING_PLACEHOLDER = "/paintings/placeholder.svg";
+
+/** URL affichable : API/Blob, chemin local, ou placeholder. */
+export function resolvePaintingImageSrc(
+  image: string | undefined | null,
+  slug: string,
+): string {
+  const trimmed = image?.trim();
+  if (
+    trimmed &&
+    (trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("/uploads/") ||
+      trimmed.startsWith("/paintings/"))
+  ) {
+    return trimmed;
+  }
+  return paintingImage(slug);
+}
+
 const COLLECTION_DEFS = [
   {
     slug: "figures-symboliques",
@@ -116,6 +136,7 @@ export async function getPaintings(): Promise<Painting[]> {
       ...p,
       price: Number(p.price),
       printPrice: p.printPrice != null ? Number(p.printPrice) : undefined,
+      image: resolvePaintingImageSrc(p.image, p.slug),
     }));
   } catch {
     return getStaticPaintings();
@@ -131,6 +152,7 @@ export async function getPainting(slug: string) {
       ...p,
       price: Number(p.price),
       printPrice: p.printPrice != null ? Number(p.printPrice) : undefined,
+      image: resolvePaintingImageSrc(p.image, p.slug),
     };
   } catch {
     return getStaticPaintings().find((p) => p.slug === slug);

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArtistPortrait } from "@/components/artist/ArtistPortrait";
 import { ARTIST } from "@/lib/artist";
+import { PRESS_MENTIONS } from "@/lib/trust-content";
 import {
   homeBtnGhost,
   homeBtnPrimary,
@@ -172,6 +173,41 @@ export function ArtistAboutPage() {
               </li>
             ))}
           </ol>
+        </div>
+      </section>
+
+      {/* Presse & expositions */}
+      <section className="border-b border-stone-200/80 bg-white py-16 md:py-20">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+          <p className={`${homeEyebrow} text-center`}>Presse & expositions</p>
+          <h2 className={`mt-2 text-center ${homeTitle}`}>
+            Sur scène
+            <span className={`mt-1 block ${homeTitleItalic}`}>et en atelier</span>
+          </h2>
+          <ul className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-2">
+            {PRESS_MENTIONS.map((item) => (
+              <li
+                key={item.title}
+                className="border border-stone-200/80 bg-[#faf7f2] p-6"
+              >
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-900/80">
+                  {item.source}
+                  {item.year ? ` · ${item.year}` : ""}
+                </p>
+                <h3 className="mt-2 font-serif text-xl text-stone-900">{item.title}</h3>
+                {item.excerpt && (
+                  <p className="mt-2 text-sm leading-relaxed text-stone-600">
+                    {item.excerpt}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-10 text-center">
+            <Link href="/calendar" className={`${homeLink} ${homeLinkUnderline}`}>
+              Voir le calendrier des événements →
+            </Link>
+          </p>
         </div>
       </section>
 

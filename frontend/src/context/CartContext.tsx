@@ -9,11 +9,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import type { UserRole } from "@/lib/api";
 import { isCustomerRole } from "@/lib/roles";
 import { getPaintingIndex } from "@/lib/painting-index";
-import { paintingImage } from "@/lib/paintings";
+import { paintingImage, resolvePaintingImageSrc } from "@/lib/paintings";
 import type { CartItem, Painting } from "@/lib/types";
 
 type StoredCartLine = {
@@ -28,7 +28,7 @@ type CartContextValue = {
   isHydrated: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (painting: Painting, type: "original" | "print") => void;
+  addItem: (painting: Painting, type: "original" | "print") => boolean;
   removeItem: (slug: string, type: "original" | "print") => void;
   clearCart: () => void;
   total: number;
@@ -100,7 +100,7 @@ function resolveLines(
     out.push({
       painting: {
         ...painting,
-        image: painting.image || paintingImage(painting.slug),
+        image: resolvePaintingImageSrc(painting.image, painting.slug),
       },
       type: line.type,
       quantity: Math.max(1, line.quantity),
@@ -109,8 +109,12 @@ function resolveLines(
   return out;
 }
 
+function activeStorageKey(userId?: string | null, role?: UserRole | null) {
+  if (userId && isCustomerRole(role)) return storageKey(userId);
+  return storageKey(null);
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -119,45 +123,37 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const persist = useCallback(
     (next: CartItem[]) => {
-      if (!user?.id || !isCustomerRole(user.role)) return;
-      writeStored(storageKey(user.id), toStored(next));
+      const key = activeStorageKey(user?.id, user?.role);
+      writeStored(key, toStored(next));
     },
     [user?.id, user?.role],
   );
 
   const hydrateFromStorage = useCallback(async () => {
     const index = await getPaintingIndex();
-    const key = storageKey(user?.id);
+    const guestKey = storageKey(null);
+    const customerKey = user?.id ? storageKey(user.id) : guestKey;
 
     if (user?.id && isCustomerRole(user.role)) {
-      const guestLines = readStored(storageKey(null));
-      const userLines = readStored(key);
+      const guestLines = readStored(guestKey);
+      const userLines = readStored(customerKey);
       if (guestLines.length > 0) {
         const merged = mergeLines(userLines, guestLines);
-        writeStored(key, merged);
-        localStorage.removeItem(storageKey(null));
+        writeStored(customerKey, merged);
+        localStorage.removeItem(guestKey);
       }
     }
 
-    const lines = user?.id && isCustomerRole(user.role) ? readStored(key) : [];
+    const key = activeStorageKey(user?.id, user?.role);
+    const lines = readStored(key);
     skipPersist.current = true;
     setItems(resolveLines(lines, index.paintings));
     skipPersist.current = false;
     setIsHydrated(true);
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   useEffect(() => {
     if (authLoading) return;
-
-    if (!user || !isCustomerRole(user.role)) {
-      skipPersist.current = true;
-      setItems([]);
-      setIsOpen(false);
-      skipPersist.current = false;
-      setIsHydrated(true);
-      return;
-    }
-
     setIsHydrated(false);
     void hydrateFromStorage();
   }, [authLoading, user?.id, user?.role, hydrateFromStorage]);
@@ -167,48 +163,40 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     persist(items);
   }, [items, isHydrated, persist]);
 
-  const addItem = useCallback(
-    (painting: Painting, type: "original" | "print") => {
-      if (!user?.id || !isCustomerRole(user.role)) {
-        const path =
-          typeof window !== "undefined"
-            ? `${window.location.pathname}${window.location.search}`
-            : "/paintings";
-        router.push(`/login?redirect=${encodeURIComponent(path)}`);
-        return;
-      }
+  const addItem = useCallback((painting: Painting, type: "original" | "print") => {
+    const price =
+      type === "original" ? painting.price : (painting.printPrice ?? 0);
+    if (price <= 0) return false;
 
-      const price =
-        type === "original" ? painting.price : (painting.printPrice ?? 0);
-      if (price <= 0 && type === "original") return;
+    if (type === "original" && painting.status === "sold") return false;
+    if (type === "print" && !painting.printAvailable) return false;
 
-      setItems((prev) => {
-        const existing = prev.find(
-          (i) => i.painting.slug === painting.slug && i.type === type,
+    setItems((prev) => {
+      const existing = prev.find(
+        (i) => i.painting.slug === painting.slug && i.type === type,
+      );
+      if (existing) {
+        return prev.map((i) =>
+          i.painting.slug === painting.slug && i.type === type
+            ? { ...i, quantity: i.quantity + 1 }
+            : i,
         );
-        if (existing) {
-          return prev.map((i) =>
-            i.painting.slug === painting.slug && i.type === type
-              ? { ...i, quantity: i.quantity + 1 }
-              : i,
-          );
-        }
-        return [
-          ...prev,
-          {
-            painting: {
-              ...painting,
-              image: painting.image || paintingImage(painting.slug),
-            },
-            type,
-            quantity: 1,
+      }
+      return [
+        ...prev,
+        {
+          painting: {
+            ...painting,
+            image: resolvePaintingImageSrc(painting.image, painting.slug),
           },
-        ];
-      });
-      setIsOpen(true);
-    },
-    [user?.id, user?.role, router],
-  );
+          type,
+          quantity: 1,
+        },
+      ];
+    });
+    setIsOpen(true);
+    return true;
+  }, []);
 
   const removeItem = useCallback((slug: string, type: "original" | "print") => {
     setItems((prev) =>

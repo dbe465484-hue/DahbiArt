@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AddToCartButtons } from "@/components/paintings/AddToCartButtons";
 import { PaintingDetailMedia } from "@/components/paintings/PaintingDetailMedia";
 import { PaintingRelated } from "@/components/paintings/PaintingRelated";
+import { PaintingTrustPanel } from "@/components/paintings/PaintingTrustPanel";
 import { RoomVisualizer } from "@/components/paintings/RoomVisualizer";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { formatPrice, getPainting, getPaintings, getStaticPaintingSlugs } from "@/lib/paintings";
@@ -56,6 +57,7 @@ export default async function PaintingDetailPage({ params }: Props) {
                   : formatPrice(painting.price)}
             </p>
             <AddToCartButtons painting={painting} />
+            <PaintingTrustPanel painting={painting} />
             <RoomVisualizer
               paintingImage={painting.image}
               paintingTitle={painting.title}

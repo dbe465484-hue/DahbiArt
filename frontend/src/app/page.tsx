@@ -5,6 +5,7 @@ import { FeaturedTabs } from "@/components/home/FeaturedTabs";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { HomeIntroStrip } from "@/components/home/HomeIntroStrip";
 import { Newsletter } from "@/components/home/Newsletter";
+import { TestimonialsBand } from "@/components/home/TestimonialsBand";
 import { SplashIntro } from "@/components/home/SplashIntro";
 import {
   getAvailable,
@@ -33,6 +34,7 @@ export default async function HomePage() {
           />
           <HomeIntroStrip paintings={paintings} featured={featured} />
           <ArtistExhibitionBand />
+          <TestimonialsBand />
           <CommissionCTA paintings={paintings} />
           <BlogStrip />
           <Newsletter />
